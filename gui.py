@@ -77,7 +77,8 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
 
     def calculate(self):
         self.getInfo()
-        face_value = self.face_value.text()
+        code = self.code.text()
+        face_value = self.face_value.text() if self.face_value.text() else '0'
         if not face_value.replace('.', '', 1).isdigit():
             QtWidgets.QMessageBox().about(self, '错误信息', '券面金额错误')
             return False
@@ -86,33 +87,16 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
             QtWidgets.QMessageBox().about(self, '错误信息', '净价错误')
             return False
         settlement_date = self.settlement_date.text()
-        settlement_days = self.settlement_days.currentText()[-1]
+        settlement_days = self.settlement_days.currentText()
 
         #计算到期收益率、应计利息、全价
-        #TODO
+        numbers = get_numbers(code, clean_price, settlement_date, settlement_days)
+        self.full_price.setText(str(numbers['full price']))
+        self.ytm.setText(str(numbers['ytm']))
+        self.accrued_interest.setText(str(numbers['accrued interest']))
 
-        zhongzhai_clean_price_deviation = float(clean_price) - \
-            float(self.zhongzhai_clean_price.text())
-        qingsuansuo_clean_price_deviation = float(clean_price) - \
-            float(self.qingsuansuo_clean_price.text())
-        zhongzheng_clean_price_deviation = float(clean_price) - \
-            float(self.zhongzheng_clean_price.text())
-
-        self.zhongzhai_clean_price_deviation_pct.setText(
-            str(100*zhongzhai_clean_price_deviation/float(self.zhongzhai_clean_price.text())))
-        self.zhongzhai_clean_price_deviation.setText(
-            str(zhongzhai_clean_price_deviation))
-
-        self.qingsuansuo_clean_price_deviation_pct.setText(
-            str(100*qingsuansuo_clean_price_deviation/float(self.qingsuansuo_clean_price.text())))
-        self.qingsuansuo_clean_price_deviation.setText(
-            str(qingsuansuo_clean_price_deviation))
-
-        self.zhongzheng_clean_price_deviation_pct.setText(
-            str(100*zhongzheng_clean_price_deviation/float(self.zhongzheng_clean_price.text())))
-        self.zhongzheng_clean_price_deviation.setText(
-            str(zhongzheng_clean_price_deviation))
-
+        #净价偏离度
+        get_deviation(self, clean_price)
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
@@ -144,4 +128,4 @@ class Ui(QtWidgets.QMainWindow):
         self.bond_info_ui.cash_position.setText(str(cash_position))
 
     def sendOrder(self):
-        checkOrder()
+        check_order()
