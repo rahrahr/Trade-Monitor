@@ -89,27 +89,38 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
         settlement_date = self.settlement_date.text()
         settlement_days = self.settlement_days.currentText()
 
-        #计算到期收益率、应计利息、全价
-        numbers = get_numbers(code, clean_price, settlement_date, settlement_days)
+        # 计算到期收益率、应计利息、全价
+        numbers = get_numbers(
+            code, clean_price, settlement_date, settlement_days)
         self.full_price.setText(str(numbers['full price']))
         self.ytm.setText(str(numbers['ytm']))
         self.accrued_interest.setText(str(numbers['accrued interest']))
 
-        #净价偏离度
+        # 净价偏离度
         get_deviation(self, clean_price)
+
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
-        self.mdi = QtWidgets.QMdiArea()
-        self.setCentralWidget(self.mdi)
+        self.resize(1500, 1000)
+        layout_1 = QtWidgets.QHBoxLayout()
+        layout_2 = QtWidgets.QHBoxLayout()
 
         self.trader_ui = TraderUi()
         self.counterparty_ui = CounterpartyUi()
         self.bond_info_ui = BondInfoUi()
-        self.mdi.addSubWindow(self.trader_ui)
-        self.mdi.addSubWindow(self.counterparty_ui)
-        self.mdi.addSubWindow(self.bond_info_ui)
+
+        layout_1.addWidget(self.trader_ui)
+        layout_1.addWidget(self.counterparty_ui)
+        layout_2.addWidget(self.bond_info_ui)
+        
+        mainlayout = QtWidgets.QVBoxLayout()
+        mainlayout.addLayout(layout_1, 10)
+        mainlayout.addLayout(layout_2, 60)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(mainlayout)
+        self.setCentralWidget(widget)
 
         self.bond_info_ui.get_position.clicked.connect(self.getPosition)
         self.bond_info_ui.send_order.clicked.connect(self.sendOrder)
