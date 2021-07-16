@@ -97,7 +97,27 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
         self.accrued_interest.setText(str(numbers['accrued interest']))
 
         # 净价偏离度
-        get_deviation(self, clean_price)
+        set_deviation(self, clean_price)
+
+
+class TransferUi(QtWidgets.QMdiSubWindow):
+    def __init__(self):
+        super(BondInfoUi, self).__init__()
+        uic.loadUi("transfer.ui", self)
+        self.get_transfer_info.clicked.connect(self.getTransferInfo)
+
+    def getTransferInfo(self):
+        code = self.code.text()
+        target_exchange = self.target_exchange.text().upper()
+        transfer_start_date = self.transfer_start_date.text()
+
+        if re.match(r'^\d{6,}\.(IB|SZ|SH)$', code) is None:
+            QtWidgets.QMessageBox().about(self, '错误信息', '债券代码格式错误')
+            return False
+
+        if target_exchange not in ('IB', 'SZ', 'SH'):
+            QtWidgets.QMessageBox().about(self, '错误信息', "转入市场不属于('IB','SZ','SH')")
+            return False
 
 
 class Ui(QtWidgets.QMainWindow):
@@ -110,11 +130,13 @@ class Ui(QtWidgets.QMainWindow):
         self.trader_ui = TraderUi()
         self.counterparty_ui = CounterpartyUi()
         self.bond_info_ui = BondInfoUi()
+        self.transfer_ui = TransferUi()
 
         layout_1.addWidget(self.trader_ui)
         layout_1.addWidget(self.counterparty_ui)
         layout_2.addWidget(self.bond_info_ui)
-        
+        layout_2.addWidget(self.transfer_ui)
+
         mainlayout = QtWidgets.QVBoxLayout()
         mainlayout.addLayout(layout_1, 10)
         mainlayout.addLayout(layout_2, 60)
@@ -124,6 +146,9 @@ class Ui(QtWidgets.QMainWindow):
 
         self.bond_info_ui.get_position.clicked.connect(self.getPosition)
         self.bond_info_ui.send_order.clicked.connect(self.sendOrder)
+
+        self.transfer_ui.get_position.clicked.connect(self.getPosition)
+        self.transfer_ui.send_order.clicked.connect(self.sendOrder)
 
     def getPosition(self):
         trader_position = json.load(open('trader.json'))[

@@ -26,7 +26,7 @@ def get_numbers(code: str, clean_price: str,
     return result
 
 
-def get_deviation(mainwindow, clean_price: float):
+def set_deviation(mainwindow, clean_price: float):
     zhongzhai_clean_price_deviation = float(clean_price) - \
         float(mainwindow.zhongzhai_clean_price.text())
     qingsuansuo_clean_price_deviation = float(clean_price) - \

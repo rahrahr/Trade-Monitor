@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>759</width>
-    <height>422</height>
+    <width>674</width>
+    <height>399</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,78 +31,44 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>20</x>
       <y>20</y>
-      <width>671</width>
-      <height>388</height>
+      <width>631</width>
+      <height>361</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="6" column="4">
-      <widget class="QLineEdit" name="settlement_amount_capitalized"/>
-     </item>
-     <item row="1" column="3">
-      <widget class="QLineEdit" name="cash_position"/>
-     </item>
-     <item row="7" column="5">
-      <widget class="QLineEdit" name="zhongzhai_clean_price_deviation"/>
-     </item>
-     <item row="4" column="1">
-      <widget class="QLineEdit" name="ytm"/>
-     </item>
-     <item row="0" column="2">
-      <widget class="QPushButton" name="get_info">
+     <item row="3" column="3">
+      <widget class="QLabel" name="label_12">
        <property name="text">
-        <string>获取行情</string>
+        <string>结算日期</string>
        </property>
       </widget>
      </item>
-     <item row="9" column="0">
-      <widget class="QLabel" name="label_9">
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>中证估值（元）</string>
+        <string>全价（元）</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="4">
+      <widget class="QLineEdit" name="settlement_amount_capitalized"/>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>清算所估值（元）</string>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
       <widget class="QLineEdit" name="clean_price"/>
      </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="code"/>
-     </item>
-     <item row="1" column="2">
-      <widget class="QLabel" name="label_21">
+     <item row="7" column="3">
+      <widget class="QLabel" name="label_14">
        <property name="text">
-        <string>资金头寸</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="4">
-      <widget class="QLineEdit" name="zhongzheng_clean_price_deviation_pct"/>
-     </item>
-     <item row="4" column="5">
-      <widget class="QLineEdit" name="accrued_interest"/>
-     </item>
-     <item row="5" column="3">
-      <widget class="QLabel" name="label_18">
-       <property name="text">
-        <string>结算金额（元）</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="5">
-      <widget class="QLineEdit" name="qingsuansuo_clean_price_deviation"/>
-     </item>
-     <item row="9" column="1">
-      <widget class="QLineEdit" name="zhongzheng_clean_price"/>
-     </item>
-     <item row="8" column="2">
-      <widget class="QLineEdit" name="qingsuansuo_ytm"/>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>全价（元）</string>
+        <string>净价偏离（度/量）</string>
        </property>
       </widget>
      </item>
@@ -113,15 +79,84 @@
        </property>
       </widget>
      </item>
-     <item row="8" column="3">
-      <widget class="QLabel" name="label_17">
+     <item row="5" column="4">
+      <widget class="QLineEdit" name="settlement_amount"/>
+     </item>
+     <item row="9" column="2">
+      <widget class="QLineEdit" name="zhongzheng_ytm"/>
+     </item>
+     <item row="9" column="3">
+      <widget class="QLabel" name="label_10">
        <property name="text">
         <string>净价偏离（度/量）</string>
        </property>
       </widget>
      </item>
+     <item row="3" column="5">
+      <widget class="QPushButton" name="start_calculation">
+       <property name="text">
+        <string>开始计算</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="bond_position"/>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="label_21">
+       <property name="text">
+        <string>资金头寸</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="4">
+      <widget class="QLineEdit" name="zhongzhai_clean_price_deviation_pct"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>中债估值（元）</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QLineEdit" name="zhongzheng_clean_price"/>
+     </item>
+     <item row="8" column="2">
+      <widget class="QLineEdit" name="qingsuansuo_ytm"/>
+     </item>
+     <item row="0" column="4">
+      <widget class="QComboBox" name="trade_direction">
+       <item>
+        <property name="text">
+         <string>买</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>卖</string>
+        </property>
+       </item>
+      </widget>
+     </item>
      <item row="9" column="5">
       <widget class="QLineEdit" name="zhongzheng_clean_price_deviation"/>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="ytm"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="code"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>债券代码</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLineEdit" name="zhongzhai_clean_price"/>
      </item>
      <item row="3" column="0">
       <widget class="QLabel" name="label_3">
@@ -130,20 +165,87 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
-      <widget class="QLineEdit" name="full_price"/>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="bond_position"/>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="face_value"/>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_4">
+     <item row="0" column="2">
+      <widget class="QPushButton" name="get_info">
        <property name="text">
-        <string>到期收益率（%）</string>
+        <string>获取行情</string>
        </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QPushButton" name="send_order">
+       <property name="text">
+        <string>报单</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="3">
+      <widget class="QLabel" name="label_18">
+       <property name="text">
+        <string>结算金额（元）</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="4">
+      <widget class="QLineEdit" name="qingsuansuo_clean_price_deviation_pct"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>结算方式</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="3">
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>总应计利息（元）</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4">
+      <widget class="QDateEdit" name="settlement_date"/>
+     </item>
+     <item row="4" column="4">
+      <widget class="QCheckBox" name="checkBox">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QLineEdit" name="cash_position"/>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>中证估值（元）</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="5">
+      <widget class="QLineEdit" name="accrued_interest"/>
+     </item>
+     <item row="8" column="1">
+      <widget class="QLineEdit" name="qingsuansuo_clean_price"/>
+     </item>
+     <item row="9" column="4">
+      <widget class="QLineEdit" name="zhongzheng_clean_price_deviation_pct"/>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="label_15">
+       <property name="text">
+        <string>交易方向</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QComboBox" name="settlement_method">
+       <item>
+        <property name="text">
+         <string>DVP</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item row="2" column="4">
@@ -160,82 +262,35 @@
        </item>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
+     <item row="5" column="1">
+      <widget class="QLineEdit" name="full_price"/>
+     </item>
+     <item row="1" column="5">
+      <widget class="QPushButton" name="get_position">
        <property name="text">
-        <string>债券代码</string>
+        <string>获取头寸</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="label_6">
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>结算方式</string>
+        <string>到期收益率（%）</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="3">
-      <widget class="QLabel" name="label_15">
-       <property name="text">
-        <string>交易方向</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="3">
-      <widget class="QLabel" name="label_11">
-       <property name="text">
-        <string>总应计利息（元）</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="2">
-      <widget class="QLineEdit" name="zhongzhai_ytm"/>
-     </item>
-     <item row="7" column="3">
-      <widget class="QLabel" name="label_14">
+     <item row="8" column="3">
+      <widget class="QLabel" name="label_17">
        <property name="text">
         <string>净价偏离（度/量）</string>
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
-      <widget class="QLineEdit" name="zhongzhai_clean_price"/>
+     <item row="7" column="5">
+      <widget class="QLineEdit" name="zhongzhai_clean_price_deviation"/>
      </item>
-     <item row="8" column="0">
-      <widget class="QLabel" name="label_8">
-       <property name="text">
-        <string>清算所估值（元）</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="3">
-      <widget class="QLabel" name="label_10">
-       <property name="text">
-        <string>净价偏离（度/量）</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_20">
-       <property name="text">
-        <string>现券持仓</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="4">
-      <widget class="QLineEdit" name="qingsuansuo_clean_price_deviation_pct"/>
-     </item>
-     <item row="6" column="1">
-      <widget class="QComboBox" name="settlement_method">
-       <item>
-        <property name="text">
-         <string>DVP</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="5" column="4">
-      <widget class="QLineEdit" name="settlement_amount"/>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="face_value"/>
      </item>
      <item row="6" column="3">
       <widget class="QLabel" name="label_16">
@@ -244,48 +299,13 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="4">
-      <widget class="QCheckBox" name="checkBox">
+     <item row="7" column="2">
+      <widget class="QLineEdit" name="zhongzhai_ytm"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_20">
        <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="4">
-      <widget class="QLineEdit" name="zhongzhai_clean_price_deviation_pct"/>
-     </item>
-     <item row="3" column="5">
-      <widget class="QPushButton" name="start_calculation">
-       <property name="text">
-        <string>开始计算</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="4">
-      <widget class="QComboBox" name="trade_direction">
-       <item>
-        <property name="text">
-         <string>买</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>卖</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="label_7">
-       <property name="text">
-        <string>中债估值（元）</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="3">
-      <widget class="QLabel" name="label_12">
-       <property name="text">
-        <string>结算日期</string>
+        <string>现券持仓</string>
        </property>
       </widget>
      </item>
@@ -296,28 +316,8 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="4">
-      <widget class="QDateEdit" name="settlement_date"/>
-     </item>
-     <item row="9" column="2">
-      <widget class="QLineEdit" name="zhongzheng_ytm"/>
-     </item>
-     <item row="8" column="1">
-      <widget class="QLineEdit" name="qingsuansuo_clean_price"/>
-     </item>
-     <item row="1" column="5">
-      <widget class="QPushButton" name="get_position">
-       <property name="text">
-        <string>获取头寸</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="5">
-      <widget class="QPushButton" name="send_order">
-       <property name="text">
-        <string>报单</string>
-       </property>
-      </widget>
+     <item row="8" column="5">
+      <widget class="QLineEdit" name="qingsuansuo_clean_price_deviation"/>
      </item>
     </layout>
    </widget>
