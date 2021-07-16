@@ -102,7 +102,7 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
 
 class TransferUi(QtWidgets.QMdiSubWindow):
     def __init__(self):
-        super(BondInfoUi, self).__init__()
+        super(TransferUi, self).__init__()
         uic.loadUi("transfer.ui", self)
         self.get_transfer_info.clicked.connect(self.getTransferInfo)
 
@@ -163,5 +163,5 @@ class Ui(QtWidgets.QMainWindow):
         self.bond_info_ui.bond_position.setText(str(bond_position))
         self.bond_info_ui.cash_position.setText(str(cash_position))
 
-    def sendOrder(self):
-        check_order()
+    def sendOrder(self): 
+        pass
