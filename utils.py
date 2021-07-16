@@ -1,7 +1,7 @@
 import xlwings as xw
 
-calculator_path = 'project1_V4.xlsx'
-calculator = xw.Book(calculator_path).sheets[0]
+calculator_path = 'project1_V5.xlsx'
+calculator = xw.Book(calculator_path).sheets[1]
 
 
 def get_quote(code: str, date: str) -> dict:
@@ -19,6 +19,9 @@ def get_numbers(code: str, clean_price: str,
     calculator.range('C4').value = settlement_date
     calculator.range('C5').value = clean_price
     calculator.range('C8').value = settlement_days
+    
+    ytm_ = xw.Book(calculator_path).macro("模块1.到期收益率_get")
+    ytm_()
 
     result['ytm'] = calculator.range('C14').value
     result['accrued interest'] = calculator.range('C11').value
@@ -35,16 +38,16 @@ def set_deviation(mainwindow, clean_price: float):
         float(mainwindow.zhongzheng_clean_price.text())
 
     mainwindow.zhongzhai_clean_price_deviation_pct.setText(
-        str(100*zhongzhai_clean_price_deviation/float(mainwindow.zhongzhai_clean_price.text())))
+        '{:.4f}'.format(100*zhongzhai_clean_price_deviation/float(mainwindow.zhongzhai_clean_price.text())))
     mainwindow.zhongzhai_clean_price_deviation.setText(
-        str(zhongzhai_clean_price_deviation))
+        '{:.4f}'.format(zhongzhai_clean_price_deviation))
 
     mainwindow.qingsuansuo_clean_price_deviation_pct.setText(
-        str(100*qingsuansuo_clean_price_deviation/float(mainwindow.qingsuansuo_clean_price.text())))
+        '{:.4f}'.format(100*qingsuansuo_clean_price_deviation/float(mainwindow.qingsuansuo_clean_price.text())))
     mainwindow.qingsuansuo_clean_price_deviation.setText(
-        str(qingsuansuo_clean_price_deviation))
+        '{:.4f}'.format(qingsuansuo_clean_price_deviation))
 
     mainwindow.zhongzheng_clean_price_deviation_pct.setText(
-        str(100*zhongzheng_clean_price_deviation/float(mainwindow.zhongzheng_clean_price.text())))
+        '{:.4f}'.format(100*zhongzheng_clean_price_deviation/float(mainwindow.zhongzheng_clean_price.text())))
     mainwindow.zhongzheng_clean_price_deviation.setText(
-        str(zhongzheng_clean_price_deviation))
+        '{:.4f}'.format(zhongzheng_clean_price_deviation))

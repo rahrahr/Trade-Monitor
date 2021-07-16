@@ -1,17 +1,19 @@
 import json
 import re
 import traceback
-
-from compliance import *
-from utils import *
+import pandas as pd
+import xlwings as xw
 from PyQt5 import QtWidgets, uic
+
+import compliance
+from utils import *
 
 
 class TraderUi(QtWidgets.QMdiSubWindow):
     def __init__(self):
         super(TraderUi, self).__init__()
         uic.loadUi("trader.ui", self)
-        accounts = json.load(open('trader.json'))
+        accounts = json.load(open('trader.json', encoding='utf-8'))
         self.list_type.clear()
         self.list_type.addItems(accounts.keys())
         self.list_type.currentTextChanged.connect(self.on_list_type_change)
@@ -24,7 +26,7 @@ class TraderUi(QtWidgets.QMdiSubWindow):
     def on_list_type_change(self):
         self.account_list.clear()
         key = self.list_type.text()
-        value = json.load(open('trader.json'))[key].keys()
+        value = json.load(open('trader.json', encoding='utf-8'))[key].keys()
         self.account_list.addItems(value)
 
 
@@ -32,7 +34,7 @@ class CounterpartyUi(QtWidgets.QMdiSubWindow):
     def __init__(self):
         super(CounterpartyUi, self).__init__()
         uic.loadUi("counterparty.ui", self)
-        counterparty = json.load(open('counterparty.json'))
+        counterparty = json.load(open('counterparty.json', encoding='utf-8'))
         self.counterparty_type.clear()
         self.counterparty_type.addItems(counterparty.keys())
         self.counterparty_type.currentTextChanged.connect(
@@ -46,7 +48,7 @@ class CounterpartyUi(QtWidgets.QMdiSubWindow):
     def on_counterparty_type_change(self):
         self.counterparty_list.clear()
         key = self.counterparty_type.currentText()
-        value = json.load(open('counterparty.json'))[key]
+        value = json.load(open('counterparty.json', encoding='utf-8'))[key]
         self.counterparty_list.addItems(value)
 
 
@@ -66,14 +68,21 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
             return False
 
         quote = get_quote(code, settlment_date)
-        self.zhongzhai_clean_price.setText(str(quote['中债估值']['净价']))
-        self.zhongzhai_ytm.setText(str(quote['中债估值']['YTM']))
+        self.zhongzhai_clean_price.setText(
+            '{:.4f}'.format(quote['中债估值']['净价']))
+        self.zhongzhai_ytm.setText(
+            '{:.4f}'.format(quote['中债估值']['YTM']))
 
-        self.qingsuansuo_clean_price.setText(str(quote['清算所估值']['净价']))
-        self.qingsuansuo_ytm.setText(str(quote['清算所估值']['YTM']))
+        self.qingsuansuo_clean_price.setText(
+            '{:.4f}'.format(quote['清算所估值']['净价']))
+        self.qingsuansuo_ytm.setText('{:.4f}'.format(quote['清算所估值']['YTM']))
 
-        self.zhongzheng_clean_price.setText(str(quote['中证估值']['净价']))
-        self.zhongzheng_ytm.setText(str(quote['中证估值']['YTM']))
+        self.zhongzheng_clean_price.setText(
+            '{:.4f}'.format(quote['中证估值']['净价']))
+        self.zhongzheng_ytm.setText('{:.4f}'.format(quote['中证估值']['YTM']))
+
+    def _export_info(self):
+        compliance._export_info(self)
 
     def calculate(self):
         self.getInfo()
@@ -92,9 +101,12 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
         # 计算到期收益率、应计利息、全价
         numbers = get_numbers(
             code, clean_price, settlement_date, settlement_days)
-        self.full_price.setText(str(numbers['full price']))
-        self.ytm.setText(str(numbers['ytm']))
-        self.accrued_interest.setText(str(numbers['accrued interest']))
+        self.full_price.setText('{:.4f}'.format(
+            numbers['full price'] if numbers['full price'] else 0))
+        self.ytm.setText('{:.4f}'.format(
+            numbers['ytm'] if numbers['ytm'] else 0))
+        self.accrued_interest.setText('{:.4f}'.format(
+            numbers['accrued interest'] if numbers['accrued interest'] else 0))
 
         # 净价偏离度
         set_deviation(self, clean_price)
@@ -148,10 +160,10 @@ class Ui(QtWidgets.QMainWindow):
         self.bond_info_ui.send_order.clicked.connect(self.sendOrder)
 
         self.transfer_ui.get_position.clicked.connect(self.getPosition)
-        self.transfer_ui.send_order.clicked.connect(self.sendOrder)
+        self.transfer_ui.send_order.clicked.connect(self.sendTransferOrder)
 
     def getPosition(self):
-        trader_position = json.load(open('trader.json'))[
+        trader_position = json.load(open('trader.json', encoding='utf-8'))[
             self.trader_ui.list_type.currentText()]
 
         trader_id = self.trader_ui.account_list.currentText()
@@ -163,5 +175,8 @@ class Ui(QtWidgets.QMainWindow):
         self.bond_info_ui.bond_position.setText(str(bond_position))
         self.bond_info_ui.cash_position.setText(str(cash_position))
 
-    def sendOrder(self): 
+    def sendOrder(self):
+        self.bond_info_ui._export_info()
+
+    def sendTransferOrder(self):
         pass
