@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>608</width>
-    <height>231</height>
+    <width>610</width>
+    <height>251</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -120,6 +120,19 @@
       <widget class="QLineEdit" name="transfer_finish_date"/>
      </item>
     </layout>
+   </widget>
+   <widget class="QPushButton" name="is_last_trade">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>210</y>
+      <width>133</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>完成今日交易</string>
+    </property>
    </widget>
   </widget>
  </widget>

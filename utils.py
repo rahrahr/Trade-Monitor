@@ -1,6 +1,6 @@
 import xlwings as xw
 
-calculator_path = 'project1_V5.xlsx'
+calculator_path = 'project1_V5.xlsm'
 calculator = xw.Book(calculator_path).sheets[1]
 
 

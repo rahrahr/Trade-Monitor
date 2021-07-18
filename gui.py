@@ -175,8 +175,15 @@ class Ui(QtWidgets.QMainWindow):
         self.bond_info_ui.bond_position.setText(str(bond_position))
         self.bond_info_ui.cash_position.setText(str(cash_position))
 
+    def _export_trader_info(self):
+        compliance._export_trader_info(self)
+
     def sendOrder(self):
         self.bond_info_ui._export_info()
+        self._export_trader_info()
+        if not compliance.check_order():
+            QtWidgets.QMessageBox().about(self, '错误信息', '交易未完成')
+            return False
 
     def sendTransferOrder(self):
         pass
