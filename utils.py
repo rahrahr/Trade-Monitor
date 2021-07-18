@@ -1,6 +1,8 @@
 import xlwings as xw
+import json
 
-calculator_path = 'project1_V5.xlsm'
+calculator_path = json.load(
+    open('settings.json'), encoding='utf-8')["Calculator Path"]
 calculator = xw.Book(calculator_path).sheets[1]
 
 
@@ -19,7 +21,7 @@ def get_numbers(code: str, clean_price: str,
     calculator.range('C4').value = settlement_date
     calculator.range('C5').value = clean_price
     calculator.range('C8').value = settlement_days
-    
+
     ytm_ = xw.Book(calculator_path).macro("模块1.到期收益率_get")
     ytm_()
 

@@ -5,8 +5,10 @@ import pandas as pd
 import xlwings as xw
 from PyQt5 import QtWidgets, uic
 
+import trade
 import compliance
-from utils import *
+import utils
+import trade_utils
 
 
 class TraderUi(QtWidgets.QMdiSubWindow):
@@ -67,7 +69,7 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
             QtWidgets.QMessageBox().about(self, '错误信息', '债券代码格式错误')
             return False
 
-        quote = get_quote(code, settlment_date)
+        quote = utils.get_quote(code, settlment_date)
         self.zhongzhai_clean_price.setText(
             '{:.4f}'.format(quote['中债估值']['净价']))
         self.zhongzhai_ytm.setText(
@@ -99,7 +101,7 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
         settlement_days = self.settlement_days.currentText()
 
         # 计算到期收益率、应计利息、全价
-        numbers = get_numbers(
+        numbers = utils.get_numbers(
             code, clean_price, settlement_date, settlement_days)
         self.full_price.setText('{:.4f}'.format(
             numbers['full price'] if numbers['full price'] else 0))
@@ -109,7 +111,7 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
             numbers['accrued interest'] if numbers['accrued interest'] else 0))
 
         # 净价偏离度
-        set_deviation(self, clean_price)
+        utils.set_deviation(self, clean_price)
 
 
 class TransferUi(QtWidgets.QMdiSubWindow):
@@ -158,10 +160,13 @@ class Ui(QtWidgets.QMainWindow):
 
         self.bond_info_ui.get_position.clicked.connect(self.getPosition)
         self.bond_info_ui.send_order.clicked.connect(self.sendOrder)
+        self.bond_info_ui.is_last_trade.clicked.connect(self.updateTplus1)
 
         self.transfer_ui.get_position.clicked.connect(self.getPosition)
         self.transfer_ui.send_order.clicked.connect(self.sendTransferOrder)
+        self.bond_info_ui.is_last_trade.clicked.connect(self.updateTransfer)
 
+        #create Portfolio instances for 
     def getPosition(self):
         trader_position = json.load(open('trader.json', encoding='utf-8'))[
             self.trader_ui.list_type.currentText()]
@@ -185,5 +190,17 @@ class Ui(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox().about(self, '错误信息', '交易未完成')
             return False
 
+        try:
+            trade = trade_utils.create_last_trade()
+        except:
+            QtWidgets.QMessageBox().about(self, '错误信息', '创建Trade对象出错，请检查“最终交易记录”Sheet是否存在缺失数值')
+            return False
+
     def sendTransferOrder(self):
+        pass
+    
+    def updateTplus1(self):
+        pass
+
+    def updateTransfer(self):
         pass
