@@ -1,17 +1,10 @@
 import xlwings as xw
 import json
+import time
 
 calculator_path = json.load(
     open('settings.json'), encoding='utf-8')["Calculator Path"]
 calculator = xw.Book(calculator_path).sheets[1]
-
-
-def get_quote(code: str, date: str) -> dict:
-    # 获取前一天的中债估值等数据
-    result = {'中债估值': {'净价': 100, 'YTM': 4},
-              '清算所估值': {'净价': 100, 'YTM': 4},
-              '中证估值': {'净价': 100, 'YTM': 4}}
-    return result
 
 
 def get_numbers(code: str, clean_price: str,
@@ -22,6 +15,7 @@ def get_numbers(code: str, clean_price: str,
     calculator.range('C5').value = clean_price
     calculator.range('C8').value = settlement_days
 
+    time.sleep(20)
     ytm_ = xw.Book(calculator_path).macro("模块1.到期收益率_get")
     ytm_()
 
