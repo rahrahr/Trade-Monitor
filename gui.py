@@ -9,6 +9,7 @@ import trade
 import compliance
 import utils
 import trade_utils
+import portfolio_utils
 
 
 class TraderUi(QtWidgets.QMdiSubWindow):
@@ -106,7 +107,7 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
         self.full_price.setText('{:.4f}'.format(
             numbers['full price'] if numbers['full price'] else 0))
         self.ytm.setText('{:.4f}'.format(
-            numbers['ytm'] if numbers['ytm'] else 0))
+            100 * numbers['ytm'] if numbers['ytm'] else 0))
         self.accrued_interest.setText('{:.4f}'.format(
             numbers['accrued interest'] if numbers['accrued interest'] else 0))
 
@@ -166,7 +167,18 @@ class Ui(QtWidgets.QMainWindow):
         self.transfer_ui.send_order.clicked.connect(self.sendTransferOrder)
         self.bond_info_ui.is_last_trade.clicked.connect(self.updateTransfer)
 
-        #create Portfolio instances for 
+        # create Portfolio instances for all accounts.
+        self.portfolios = {}
+        portflios = json.load(open('trader.json', encoding='utf-8'))
+        for key_1 in portflios.keys():
+            for key_2, item_2 in portflios[key_1].items():
+                account = key_1 + key_2
+                self.portfolios[key_1 + key_2] =\
+                    portfolio_utils.create_portfolio(account)
+                # Makes it easier to update json file
+                self.portfolios[key_1 + key_2].key_1 = key_1
+                self.portfolios[key_1 + key_2].key_2 = key_2
+
     def getPosition(self):
         trader_position = json.load(open('trader.json', encoding='utf-8'))[
             self.trader_ui.list_type.currentText()]
@@ -174,7 +186,7 @@ class Ui(QtWidgets.QMainWindow):
         trader_id = self.trader_ui.account_list.currentText()
         code = self.bond_info_ui.code.text()
 
-        bond_position = trader_position[trader_id].get(code, 0)
+        bond_position = trader_position[trader_id]['position'].get(code, 0)
         cash_position = trader_position[trader_id]['cash']
 
         self.bond_info_ui.bond_position.setText(str(bond_position))
@@ -196,11 +208,47 @@ class Ui(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox().about(self, '错误信息', '创建Trade对象出错，请检查“最终交易记录”Sheet是否存在缺失数值')
             return False
 
+        # 更新Portfolio对象
+        try:
+            if trade.settlement_days == 'T+0':
+                account = trade.inside_id
+                self.portfolios[account].portfolio_update_t0(trade)
+            elif trade.settlement_days == 'T+1':
+                account = trade.inside_id
+                self.portfolios[account].append_waiting_trade(trade)
+
+            if trade.is_inside_trade:
+                if trade.settlement_days == 'T+0':
+                    account = trade.other_inside_id
+                    self.portfolios[account].portfolio_update_t0(
+                        trade.reversed())
+                elif trade.settlement_days == 'T+1':
+                    account = trade.other_inside_id
+                    self.portfolios[account].append_waiting_trade(
+                        trade.reversed())
+
+        except:
+            QtWidgets.QMessageBox().about(
+                self, '错误信息', '更新Portfolio对象出错，请检查“最终交易记录”Sheet是否存在缺失数值')
+            return False
+
+        # 写入Excel和json文件
+        if not trade.is_inside_trade:
+            portfolio_utils.to_excel(self.portfolios[trade.inside_id])
+            portfolio_utils.to_json(self.portfolios[trade.inside_id])
+        else:
+            portfolio_utils.to_excel(self.portfolios[trade.inside_id])
+            portfolio_utils.to_excel(self.portfolios[trade.other_inside_id])
+
+            portfolio_utils.to_json(self.portfolios[trade.inside_id])
+            portfolio_utils.to_json(self.portfolios[trade.other_inside_id])
+
     def sendTransferOrder(self):
         pass
-    
+
     def updateTplus1(self):
-        pass
+        for key in self.portfolios:
+            self.portfolios[key].portfolio_update_t1()
 
     def updateTransfer(self):
         pass

@@ -18,12 +18,17 @@ def create_last_trade() -> Trade:
 
     trade_time = last_trade.loc['交易时间']
     settlement_date = last_trade.loc['结算日期']
+    settlement_days = last_trade.loc['券清算速度']
     direction = last_trade.loc['交易方向']
 
     is_inside_trade = (last_trade.loc['交易账户'] == "内部账户") and (
         last_trade.loc['交易对手'] == "内部账户")
 
+    inside_id = last_trade.loc['账户组'] + last_trade.loc['交易账户']
+    other_inside_id = last_trade.loc['交易对手组'] + last_trade.loc['交易对手']
+
     return Trade(bond_code, amount,
                  par_amount, volume,
-                 trade_time, settlement_date,
-                 direction, is_inside_trade)
+                 trade_time, settlement_date, settlement_days,
+                 direction, is_inside_trade,
+                 inside_id, other_inside_id)

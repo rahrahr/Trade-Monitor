@@ -15,31 +15,31 @@ def _export_info(mainwindow):
     # clearing previous info
     df = sheet.range('B4:E12').options(pd.DataFrame).value
     df.iloc[:, [0, 2]] = None
-    df.columns = [None, '交易方向', None]
     sheet.range('B4').value = df
+    sheet.range('D4').value = '交易方向'
 
     # write new info
-    sheet.range('C4:C12').value = [mainwindow.code.text(),
-                                   mainwindow.face_value.text(),
-                                   mainwindow.clean_price.text(),
-                                   mainwindow.ytm.text(),
-                                   mainwindow.full_price.text(),
-                                   mainwindow.settlement_method.currentText(),
-                                   mainwindow.zhongzhai_clean_price.text(),
-                                   mainwindow.qingsuansuo_clean_price.text(),
-                                   mainwindow.zhongzheng_clean_price.text()]
+    sheet.range('C4').value = mainwindow.code.text()
+    sheet.range('C5').value = mainwindow.face_value.text()
+    sheet.range('C6').value = mainwindow.clean_price.text()
+    sheet.range('C7').value = mainwindow.ytm.text()
+    sheet.range('C8').value = mainwindow.full_price.text()
+    sheet.range('C9').value = mainwindow.settlement_method.currentText()
+    sheet.range('C10').value = mainwindow.zhongzhai_clean_price.text()
+    sheet.range('C11').value = mainwindow.qingsuansuo_clean_price.text()
+    sheet.range('C12').value = mainwindow.zhongzheng_clean_price.text()
 
-    sheet.range('E4:E8').value = [mainwindow.trade_direction.currentText(),
-                                  mainwindow.settlement_days.currentText(),
-                                  mainwindow.settlement_date.text(),
-                                  mainwindow.accrued_interest.text(),
-                                  mainwindow.settlement_amount.text()]
-
-    sheet.range('E10:E12').value = [
-        mainwindow.zhongzhai_clean_price_deviation_pct.text(),
-        mainwindow.qingsuansuo_clean_price_deviation_pct.text(),
-        mainwindow.zhongzheng_clean_price_deviation_pct.text()]
-
+    sheet.range('E4').value = mainwindow.trade_direction.currentText()
+    sheet.range('E5').value = mainwindow.settlement_days.currentText()
+    sheet.range('E6').value = mainwindow.settlement_date.text()
+    sheet.range('E7').value = mainwindow.accrued_interest.text()
+    sheet.range('E8').value = mainwindow.settlement_amount.text()
+    sheet.range(
+        'E10').value = mainwindow.zhongzhai_clean_price_deviation_pct.text()
+    sheet.range(
+        'E11').value = mainwindow.qingsuansuo_clean_price_deviation_pct.text()
+    sheet.range(
+        'E12').value = mainwindow.zhongzheng_clean_price_deviation_pct.text()
     mainwindow.settlement_amount_capitalized.setText(
         str(sheet.range('E9').value))
 

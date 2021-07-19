@@ -38,86 +38,106 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="1" column="4">
-      <widget class="QPushButton" name="get_position">
-       <property name="text">
-        <string>获取头寸</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="3">
-      <widget class="QLabel" name="label_10">
-       <property name="text">
-        <string>转入结算日期</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QDateEdit" name="transfer_start_date"/>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="code"/>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>债券代码</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
+     <item row="1" column="2">
       <widget class="QPushButton" name="send_order">
        <property name="text">
         <string>报单</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="bond_position"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_20">
-       <property name="text">
-        <string>现券持仓</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>转入方市场</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="QLineEdit" name="cash_position"/>
-     </item>
-     <item row="3" column="2">
+     <item row="4" column="2">
       <widget class="QPushButton" name="get_transfer_info">
        <property name="text">
         <string>Done</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="target_exchange"/>
+     <item row="2" column="3">
+      <widget class="QLineEdit" name="cash_position"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>债券代码</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="4">
+      <widget class="QLineEdit" name="transfer_finish_date"/>
      </item>
      <item row="3" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>转入方市场</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="3">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>转入结算日期</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="code"/>
+     </item>
+     <item row="4" column="0">
       <widget class="QLabel" name="label_9">
        <property name="text">
         <string>转出结算日期</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="2">
+     <item row="2" column="2">
       <widget class="QLabel" name="label_21">
        <property name="text">
         <string>资金头寸</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="4">
-      <widget class="QLineEdit" name="transfer_finish_date"/>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_20">
+       <property name="text">
+        <string>现券持仓</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QDateEdit" name="transfer_start_date"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="bond_position"/>
+     </item>
+     <item row="2" column="4">
+      <widget class="QPushButton" name="get_position">
+       <property name="text">
+        <string>获取头寸</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="target_exchange"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>转出账户</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>转入账户</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="out_account"/>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLineEdit" name="in_account"/>
      </item>
     </layout>
    </widget>

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from trade import *
-
+import pandas as pd
 
 @dataclass
 class Portfolio:
