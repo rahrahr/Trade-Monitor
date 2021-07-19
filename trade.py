@@ -24,10 +24,12 @@ class Trade:
         self.amount: float = amount
         self.par_amount: float = par_amount
         self.volume: int = volume
+
         self.trade_time: str = trade_time
         self.settlement_date: str = settlement_date
         self.settlement_days: str = settlement_days
         self.direction: str = direction
+        
         self.is_inside_trade: bool = is_inside_trade
         self.inside_id: str = inside_id
         if is_inside_trade:

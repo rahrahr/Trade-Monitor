@@ -70,7 +70,7 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
             QtWidgets.QMessageBox().about(self, '错误信息', '债券代码格式错误')
             return False
 
-        quote = utils.get_quote(code, settlment_date)
+        quote = compliance.get_quote(code)
         self.zhongzhai_clean_price.setText(
             '{:.4f}'.format(quote['中债估值']['净价']))
         self.zhongzhai_ytm.setText(
@@ -110,7 +110,8 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
             100 * numbers['ytm'] if numbers['ytm'] else 0))
         self.accrued_interest.setText('{:.4f}'.format(
             numbers['accrued interest'] if numbers['accrued interest'] else 0))
-
+        self.settlement_amount.setText('{:.4f}'.format(
+            numbers['full price'] * 100 * float(self.face_value)))
         # 净价偏离度
         utils.set_deviation(self, clean_price)
 
@@ -120,6 +121,36 @@ class TransferUi(QtWidgets.QMdiSubWindow):
         super(TransferUi, self).__init__()
         uic.loadUi("transfer.ui", self)
         self.get_transfer_info.clicked.connect(self.getTransferInfo)
+        accounts = json.load(open('trader.json', encoding='utf-8'))
+        self.list_type.clear()
+        self.list_type.addItems(accounts.keys())
+        self.list_type.currentTextChanged.connect(self.on_list_type_change)
+
+        self.account_list.clear()
+        key = self.list_type.currentText()
+        value = accounts[key].keys()
+        self.account_list.addItems(value)
+
+        self.list_type_2.clear()
+        self.list_type_2.addItems(accounts.keys())
+        self.list_type_2.currentTextChanged.connect(self.on_list_type_change_2)
+
+        self.account_list_2.clear()
+        key = self.list_type_2.currentText()
+        value = accounts[key].keys()
+        self.account_list_2.addItems(value)
+
+    def on_list_type_change(self):
+        self.account_list.clear()
+        key = self.list_type.text()
+        value = json.load(open('trader.json', encoding='utf-8'))[key].keys()
+        self.account_list.addItems(value)
+
+    def on_list_type_change_2(self):
+        self.account_list_2.clear()
+        key = self.list_type_2.text()
+        value = json.load(open('trader.json', encoding='utf-8'))[key].keys()
+        self.account_list.addItems(value)
 
     def getTransferInfo(self):
         code = self.code.text()
@@ -215,6 +246,7 @@ class Ui(QtWidgets.QMainWindow):
                 self.portfolios[account].portfolio_update_t0(trade)
             elif trade.settlement_days == 'T+1':
                 account = trade.inside_id
+                self.portfolios[account].portfolio_update_t0(trade)
                 self.portfolios[account].append_waiting_trade(trade)
 
             if trade.is_inside_trade:
@@ -224,6 +256,7 @@ class Ui(QtWidgets.QMainWindow):
                         trade.reversed())
                 elif trade.settlement_days == 'T+1':
                     account = trade.other_inside_id
+                    self.portfolios[account].portfolio_update_t0(trade)
                     self.portfolios[account].append_waiting_trade(
                         trade.reversed())
 
@@ -244,11 +277,59 @@ class Ui(QtWidgets.QMainWindow):
             portfolio_utils.to_json(self.portfolios[trade.other_inside_id])
 
     def sendTransferOrder(self):
-        pass
+        self.transfer_ui._export_info()
+        self._export_trader_info()
+        if not compliance.check_order():
+            QtWidgets.QMessageBox().about(self, '错误信息', '交易未完成')
+            return False
+
+        try:
+            trade = trade_utils.create_last_trade()
+        except:
+            QtWidgets.QMessageBox().about(self, '错误信息', '创建Trade对象出错，请检查“最终交易记录”Sheet是否存在缺失数值')
+            return False
+
+        # 更新Portfolio对象
+        try:
+            if trade.settlement_days == 'T+0':
+                account = trade.inside_id
+                self.portfolios[account].portfolio_update_t0(trade)
+            elif trade.settlement_days == 'T+1':
+                account = trade.inside_id
+                self.portfolios[account].portfolio_update_t0(trade)
+                self.portfolios[account].append_waiting_trade(trade)
+
+            if trade.is_inside_trade:
+                if trade.settlement_days == 'T+0':
+                    account = trade.other_inside_id
+                    self.portfolios[account].portfolio_update_t0(
+                        trade.reversed())
+                elif trade.settlement_days == 'T+1':
+                    account = trade.other_inside_id
+                    self.portfolios[account].portfolio_update_t0(trade)
+                    self.portfolios[account].append_waiting_trade(
+                        trade.reversed())
+
+        except:
+            QtWidgets.QMessageBox().about(
+                self, '错误信息', '更新Portfolio对象出错，请检查“最终交易记录”Sheet是否存在缺失数值')
+            return False
+
+        # 写入Excel和json文件
+        if not trade.is_inside_trade:
+            portfolio_utils.to_excel(self.portfolios[trade.inside_id])
+            portfolio_utils.to_json(self.portfolios[trade.inside_id])
+        else:
+            portfolio_utils.to_excel(self.portfolios[trade.inside_id])
+            portfolio_utils.to_excel(self.portfolios[trade.other_inside_id])
+
+            portfolio_utils.to_json(self.portfolios[trade.inside_id])
+            portfolio_utils.to_json(self.portfolios[trade.other_inside_id])
 
     def updateTplus1(self):
         for key in self.portfolios:
             self.portfolios[key].portfolio_update_t1()
 
     def updateTransfer(self):
-        pass
+        for key in self.portfolios:
+            self.portfolios[key].portfolio_update_transfer()

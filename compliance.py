@@ -10,6 +10,18 @@ compliance_xlsx_path = json.load(
 compliance_sheet = xw.Book(compliance_xlsx_path).sheets[0]
 
 
+def get_quote(code: str) -> dict:
+    # 获取前一天的中债估值等数据
+    compliance_sheet.range('C4').value = code
+    result = {'中债估值': {'净价': compliance_sheet.range('C10').value,
+                       'YTM': compliance_sheet.range('C13').value},
+              '清算所估值': {'净价': compliance_sheet.range('C11').value,
+                        'YTM': compliance_sheet.range('C14').value},
+              '中证估值': {'净价': compliance_sheet.range('C12').value,
+                       'YTM': compliance_sheet.range('C15').value}}
+    return result
+
+
 def _export_info(mainwindow):
     sheet = compliance_sheet
     # clearing previous info
@@ -31,7 +43,7 @@ def _export_info(mainwindow):
 
     sheet.range('E4').value = mainwindow.trade_direction.currentText()
     sheet.range('E5').value = mainwindow.settlement_days.currentText()
-    sheet.range('E6').value = mainwindow.settlement_date.text()
+    sheet.range('C3').value = mainwindow.settlement_date.currentText() # Not actually settlement date
     sheet.range('E7').value = mainwindow.accrued_interest.text()
     sheet.range('E8').value = mainwindow.settlement_amount.text()
     sheet.range(
