@@ -37,6 +37,15 @@ class Trade:
 
     def reversed(self):
         reversed_direction = "卖出" if self.direction == "买入" else "买入"
+        if hasattr(self, 'in_bond_code'):
+            trade = Trade(self.in_bond_code, self.amount,
+                             self.par_amount, self.volume,
+                             self.trade_time, self.settlement_date,
+                             self.settlement_days, reversed_direction,
+                             self.is_inside_trade, self.other_inside_id,
+                             self.inside_id)
+            trade.in_bond_code = self.bond_code
+            return trade
 
         return Trade(self.bond_code, self.amount,
                      self.par_amount, self.volume,

@@ -19,7 +19,7 @@ class Portfolio:
         self.waiting_trade = pd.DataFrame(None,
                                           columns=['bond_code', 'settlement_date',
                                                    'direction', 'amount',
-                                                   'volume', 'par_amount'])
+                                                   'volume', 'par_amount', 'in_bond_code'])
 
     def append_waiting_trade(self, trade: Trade):
         x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
@@ -28,9 +28,17 @@ class Portfolio:
                          columns=['bond_code', 'settlement_date',
                                   'direction', 'amount',
                                   'volume', 'par_amount'])
+        if hasattr(trade, 'in_bond_code'):
+            x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
+                               trade.direction, trade.amount,
+                               trade.volume, trade.par_amount, trade.in_bond_code]],
+                             columns=['bond_code', 'settlement_date',
+                                      'direction', 'amount',
+                                      'volume', 'par_amount', 'in_bond_code'])
         self.waiting_trade = self.waiting_trade.append(x)
+        self.waiting_trade.index = range(self.waiting_trade.shape[0])
 
-    def bonds_add(self, trade: Trade):
+    def bonds_add(self, trade):
         # 债券记加
         if trade.bond_code in self.bonds.bond_code.to_list():
             self.bonds.loc[self.bonds.bond_code ==
@@ -44,9 +52,9 @@ class Portfolio:
                                     columns=["number", "bond_code", "par_amount", "volume", "amount"])
             self.bonds = pd.concat([self.bonds, new_bond])
 
-    def bonds_minus(self, trade: Trade):
+    def bonds_minus(self, trade):
         # 债券记减
-        if trade.volume < self.bonds.loc[self.bonds.bond_code == trade.bond_code, "volume"][0]:
+        if trade.volume < max(self.bonds.loc[self.bonds.bond_code == trade.bond_code, "volume"].iloc[0], 1):
             self.bonds.loc[self.bonds.bond_code ==
                            trade.bond_code, "volume"] -= trade.volume
             self.bonds.loc[self.bonds.bond_code ==
@@ -75,23 +83,31 @@ class Portfolio:
             self.bonds_minus(trade)
 
     def portfolio_update_t1(self):
+        # 更新现券交易的银行间T+1交易
         # 更新现券交易的交易所T+1交易
         # 当交易参数中：是今天的最后一笔交易时，才执行该函数
         # 找到所有挂起交易中今天可以结算的交易
+        print(self.waiting_trade)
         trades = self.waiting_trade[(self.waiting_trade.settlement_date == self.now_time) &
                                     ((self.waiting_trade.direction == "买入") | (self.waiting_trade.direction == "卖出"))]
         if trades.shape[0] == 0:
             return
         for i in trades.index:
-            each_trade = trades.iloc[i, :]
+            each_trade = trades.loc[i, :]
+            print(each_trade)
             if each_trade.direction == "买入":
                 if self.cash >= each_trade.amount:  # 符合条件，扣减资金，不更新交易
                     self.cash -= each_trade.amount
+                    if each_trade.bond_code[-2:] == "IB":
+                        self.bonds_add(each_trade)
                 else:  # 不符合条件，资金不变，冲销交易
-                    self.bonds_minus(each_trade)
+                    if each_trade.bond_code[-2:] != "IB":
+                        self.bonds_minus(each_trade)
             elif each_trade.direction == "卖出":
                 # 作为卖方，默认对方不会违约
                 self.cash += each_trade.amount
+                if each_trade.bond_code[-2:] == "IB":
+                    self.bonds_minus(each_trade)
         self.waiting_trade = self.waiting_trade.drop(trades.index.to_list())
 
     def portfolio_update_transfer(self):
@@ -101,6 +117,7 @@ class Portfolio:
         if trades.shape[0] == 0:
             return
         for i in trades.index:
-            each_trade = trades.iloc[i, :]
+            each_trade = trades.loc[i, :]
+            each_trade.bond_code = each_trade.in_bond_code
             self.bonds_add(each_trade)
         self.waiting_trade = self.waiting_trade.drop(trades.index.to_list())
