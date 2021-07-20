@@ -129,5 +129,7 @@ dmypy.json
 .pyre/
 
 # Misc
-*.xlsx
 .DS_Store
+*.docx
+*.xlsx
+*.xlsm
