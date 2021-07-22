@@ -36,6 +36,9 @@ class Portfolio:
     def free_cash(self):
         return self.cash - self.freeze_cash
 
+    def settle(self):
+        pass
+    
     def append_waiting_trade(self, trade: Trade):
         x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
                            trade.direction, trade.amount,

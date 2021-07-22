@@ -176,32 +176,13 @@ class Ui(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox().about(self, '', '报单完成')
 
     def sendSettlement(self):
-        cal = China(China.IB)
-        for key in self.portfolios:
-            date = self.portfolios[key].now_time
-            if isinstance(date, datetime.datetime):
-                date = date.date().isoformat()
-                date = '/'.join([i.lstrip('0') for i in date.split('-')])
-            x = date.split('/')
-            ql_date = Date(int(x[2]), int(x[1]), int(x[0]))
-            next_trading_day = cal.advance(
-                ql_date, Period('1D')).ISO().split('-')
-            next_trading_day = ql_date.ISO().split('-')
-            next_trading_day = '/'.join([x.lstrip('0')
-                                         for x in next_trading_day])
-            self.portfolios[key].now_time = next_trading_day
-            self.portfolios[key].portfolio_update_t1()
-
-            portfolio_utils.to_excel(self.portfolios[key])
-            portfolio_utils.to_json(self.portfolios[key])
-            self.portfolios[key].log()
-
-        QtWidgets.QMessageBox().about(self, '', '更新完成')
-
-    def updateTransfer(self):
-        for key in self.portfolios[key]:
-            self.portfolios[key].settle()
-        QtWidgets.QMessageBox().about(self, '', '更新完成')
+        #当前账户提交清算申请
+        list_type = self.trader_ui.list_type.currentText()
+        trader_id = self.trader_ui.account_list.currentText()
+        key = list_type + trader_id
+        
+        self.portfolios[key].settle()
+        QtWidgets.QMessageBox().about(self, '', '结算报单完成')
 
     def updateTplus1(self):
         cal = China(China.IB)
