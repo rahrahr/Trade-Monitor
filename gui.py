@@ -176,12 +176,11 @@ class Ui(QtWidgets.QMainWindow):
                 date = '/'.join([i.lstrip('0') for i in date.split('-')])
             x = date.split('/')
             ql_date = Date(int(x[2]), int(x[1]), int(x[0]))
-            # next_trading_day = cal.advance(ql_date, Period('1D')).ISO().split('-')
+            next_trading_day = cal.advance(ql_date, Period('1D')).ISO().split('-')
             next_trading_day = ql_date.ISO().split('-')
             next_trading_day = '/'.join([x.lstrip('0') for x in next_trading_day])
             self.portfolios[key].now_time = next_trading_day
             self.portfolios[key].portfolio_update_t1()
-            self.portfolios[key].now_time = date #reset date
 
             portfolio_utils.to_excel(self.portfolios[key])
             portfolio_utils.to_json(self.portfolios[key])
@@ -199,12 +198,9 @@ class Ui(QtWidgets.QMainWindow):
             ql_date = Date(int(x[2]), int(x[1]), int(x[0]))
             next_trading_day = cal.advance(
                 ql_date, Period('1D')).ISO().split('-')
-            # next_trading_day = ql_date.ISO().split('-')
             next_trading_day = '/'.join([x.lstrip('0') for x in next_trading_day])
             self.portfolios[key].now_time = next_trading_day
-            # print(self.portfolios[key].waiting_trade)
             self.portfolios[key].portfolio_update_transfer()
-            # self.portfolios[key].now_time = date  # reset date
 
             portfolio_utils.to_excel(self.portfolios[key])
             portfolio_utils.to_json(self.portfolios[key])

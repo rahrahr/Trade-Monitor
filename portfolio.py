@@ -35,7 +35,7 @@ class Portfolio:
     @property
     def free_cash(self):
         return self.cash - self.freeze_cash
-        
+
     def append_waiting_trade(self, trade: Trade):
         x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
                            trade.direction, trade.amount,
@@ -48,7 +48,7 @@ class Portfolio:
         if hasattr(trade, 'in_bond_code'):
             x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
                                trade.direction, trade.amount,
-                               trade.volume, trade.par_amount, trade.in_bond_code, 
+                               trade.volume, trade.par_amount, trade.in_bond_code,
                                trade.is_settled]],
                              columns=['bond_code', 'settlement_date',
                                       'direction', 'amount',
