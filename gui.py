@@ -9,6 +9,7 @@ from ui import *
 from utils import *
 import trade
 
+
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
@@ -36,6 +37,7 @@ class Ui(QtWidgets.QMainWindow):
         self.bond_info_ui.get_position.clicked.connect(self.getPosition)
         self.bond_info_ui.send_order.clicked.connect(self.sendOrder)
         self.bond_info_ui.is_last_trade.clicked.connect(self.updateTplus1)
+        self.bond_info_ui.send_settlement.clicked.connect(self.sendSettlement)
 
         self.transfer_ui.send_order.clicked.connect(self.sendTransferOrder)
         self.transfer_ui.is_last_trade.clicked.connect(self.updateTransfer)
@@ -72,10 +74,14 @@ class Ui(QtWidgets.QMainWindow):
         self.bond_info_ui._export_info()
         self._export_trader_info()
         x = compliance.check_spot_order()
-        if x != '交易成功':
+        if ('失败' in x) or ('不合规' in x) or ('不达标' in x):
             error_message = '报单失败，失败原因：\n'+'!\n'.join(x.split('！'))
             QtWidgets.QMessageBox().about(self, '错误信息', error_message)
             return False
+
+        elif '预警' in x:
+            error_message = '交易预警：\n'+'!\n'.join(x.split('！'))
+            QtWidgets.QMessageBox().about(self, '预警', error_message)
 
         try:
             trade = trade_utils.create_spot_trade()
@@ -102,7 +108,8 @@ class Ui(QtWidgets.QMainWindow):
                 elif trade.settlement_days == 'T+1':
                     account = trade.other_inside_id
                     if trade.bond_code[-2:] != "IB":
-                        self.portfolios[account].portfolio_update_t0(trade.reversed())
+                        self.portfolios[account].portfolio_update_t0(
+                            trade.reversed())
                     self.portfolios[account].append_waiting_trade(
                         trade.reversed())
 
@@ -113,17 +120,17 @@ class Ui(QtWidgets.QMainWindow):
 
         # 写入Excel和json文件
         if not trade.is_inside_trade:
-            portfolio_utils.to_excel(self.portfolios[trade.inside_id])
-            portfolio_utils.to_json(self.portfolios[trade.inside_id])
+            self.portfolios[trade.inside_id].to_excel()
+            self.portfolios[trade.inside_id].to_json()
         else:
-            portfolio_utils.to_excel(self.portfolios[trade.inside_id])
-            portfolio_utils.to_excel(self.portfolios[trade.other_inside_id])
+            self.portfolios[trade.inside_id].to_excel()
+            self.portfolios[trade.other_inside_id].to_excel()
 
-            portfolio_utils.to_json(self.portfolios[trade.inside_id])
+            self.portfolios[trade.inside_id].to_json()
             portfolio_utils.to_json(self.portfolios[trade.other_inside_id])
 
         QtWidgets.QMessageBox().about(self, '', '报单完成')
-    
+
     def sendTransferOrder(self):
         self.transfer_ui._export_transfer_info()
         x = compliance.check_transfer_order()
@@ -143,6 +150,7 @@ class Ui(QtWidgets.QMainWindow):
             trade.settlement_days == 'T+1'
             account = trade.inside_id
             self.portfolios[account].portfolio_update_t0(trade)
+
             if trade.is_inside_trade:
                 account = trade.other_inside_id
                 self.portfolios[account].portfolio_update_t0(trade.reversed())
@@ -167,6 +175,34 @@ class Ui(QtWidgets.QMainWindow):
 
         QtWidgets.QMessageBox().about(self, '', '报单完成')
 
+    def sendSettlement(self):
+        cal = China(China.IB)
+        for key in self.portfolios:
+            date = self.portfolios[key].now_time
+            if isinstance(date, datetime.datetime):
+                date = date.date().isoformat()
+                date = '/'.join([i.lstrip('0') for i in date.split('-')])
+            x = date.split('/')
+            ql_date = Date(int(x[2]), int(x[1]), int(x[0]))
+            next_trading_day = cal.advance(
+                ql_date, Period('1D')).ISO().split('-')
+            next_trading_day = ql_date.ISO().split('-')
+            next_trading_day = '/'.join([x.lstrip('0')
+                                         for x in next_trading_day])
+            self.portfolios[key].now_time = next_trading_day
+            self.portfolios[key].portfolio_update_t1()
+
+            portfolio_utils.to_excel(self.portfolios[key])
+            portfolio_utils.to_json(self.portfolios[key])
+            self.portfolios[key].log()
+
+        QtWidgets.QMessageBox().about(self, '', '更新完成')
+
+    def updateTransfer(self):
+        for key in self.portfolios[key]:
+            self.portfolios[key].settle()
+        QtWidgets.QMessageBox().about(self, '', '更新完成')
+
     def updateTplus1(self):
         cal = China(China.IB)
         for key in self.portfolios:
@@ -176,14 +212,17 @@ class Ui(QtWidgets.QMainWindow):
                 date = '/'.join([i.lstrip('0') for i in date.split('-')])
             x = date.split('/')
             ql_date = Date(int(x[2]), int(x[1]), int(x[0]))
-            next_trading_day = cal.advance(ql_date, Period('1D')).ISO().split('-')
+            next_trading_day = cal.advance(
+                ql_date, Period('1D')).ISO().split('-')
             next_trading_day = ql_date.ISO().split('-')
-            next_trading_day = '/'.join([x.lstrip('0') for x in next_trading_day])
+            next_trading_day = '/'.join([x.lstrip('0')
+                                         for x in next_trading_day])
             self.portfolios[key].now_time = next_trading_day
             self.portfolios[key].portfolio_update_t1()
 
             portfolio_utils.to_excel(self.portfolios[key])
             portfolio_utils.to_json(self.portfolios[key])
+            self.portfolios[key].log()
 
         QtWidgets.QMessageBox().about(self, '', '更新完成')
 
@@ -198,11 +237,13 @@ class Ui(QtWidgets.QMainWindow):
             ql_date = Date(int(x[2]), int(x[1]), int(x[0]))
             next_trading_day = cal.advance(
                 ql_date, Period('1D')).ISO().split('-')
-            next_trading_day = '/'.join([x.lstrip('0') for x in next_trading_day])
+            next_trading_day = '/'.join([x.lstrip('0')
+                                         for x in next_trading_day])
             self.portfolios[key].now_time = next_trading_day
             self.portfolios[key].portfolio_update_transfer()
 
             portfolio_utils.to_excel(self.portfolios[key])
             portfolio_utils.to_json(self.portfolios[key])
+            self.portfolios[key].log()
 
         QtWidgets.QMessageBox().about(self, '', '更新完成')

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from trade import *
 import pandas as pd
-
+import portfolio_utils
 
 @dataclass
 class Portfolio:
@@ -137,3 +137,14 @@ class Portfolio:
             each_trade = trades.loc[i, :]
             each_trade.bond_code = each_trade.in_bond_code
             self.bonds_add(each_trade)
+
+    def to_excel(self):
+        portfolio_utils.to_excel(self)
+    
+    def to_json(self):
+        portfolio_utils.to_json(self)
+
+    def log(self):
+        log_name = 'logs/log_{}_{}.csv'.format(
+            self.account, self.now_time.replace('/', ''))
+        self.all_trade.to_csv(log_name)

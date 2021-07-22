@@ -38,8 +38,8 @@ class Trade:
             self.other_inside_id = other_inside_id
 
     def reversed(self):
-        reversed_direction = "卖出" if self.direction == "买入" else "买入"
         if hasattr(self, 'in_bond_code'):
+            #转托管
             trade = Trade(self.in_bond_code, self.amount,
                           self.par_amount, self.volume,
                           self.trade_time, self.settlement_date,
@@ -47,8 +47,10 @@ class Trade:
                           self.is_inside_trade, self.other_inside_id,
                           self.inside_id)
             trade.in_bond_code = self.bond_code
+            trade.id = self.id
             return trade
-
+            
+        reversed_direction = "卖出" if self.direction == "买入" else "买入"
         return Trade(self.bond_code, self.amount,
                      self.par_amount, self.volume,
                      self.trade_time, self.settlement_date,
