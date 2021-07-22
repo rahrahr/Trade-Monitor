@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>655</width>
-    <height>411</height>
+    <width>744</width>
+    <height>437</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,8 +31,8 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>20</y>
+      <x>60</x>
+      <y>30</y>
       <width>621</width>
       <height>351</height>
      </rect>
@@ -324,14 +324,27 @@
    <widget class="QPushButton" name="is_last_trade">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>380</y>
+      <x>60</x>
+      <y>390</y>
       <width>119</width>
       <height>32</height>
      </rect>
     </property>
     <property name="text">
      <string>完成今日交易</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="send_settlement">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>390</y>
+      <width>112</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>提交结算</string>
     </property>
    </widget>
   </widget>

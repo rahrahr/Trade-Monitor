@@ -15,28 +15,47 @@ class Portfolio:
         self.account = account
         self.now_time = now_time
         self.cash = cash
+        self.freeze_cash = 0
         self.bonds = bonds
-        self.waiting_trade = pd.DataFrame(None,
-                                          columns=['bond_code', 'settlement_date',
-                                                   'direction', 'amount',
-                                                   'volume', 'par_amount', 'in_bond_code'])
+        self.all_trade = pd.DataFrame(None,
+                                      columns=['bond_code', 'settlement_date',
+                                               'direction', 'amount',
+                                               'volume', 'par_amount', 'in_bond_code', 'is_settled'])
 
+    @property
+    def waiting_trade(self):
+        # return all unsetlled T+1 trades
+        return self.all_trade[self.all_trade.settlement_date > self.now_time]
+
+    @property
+    def waiting_settlement(self):
+        # return all unsetlled trades that is settled today
+        return self.all_trade[~self.all_trade.is_settled]
+
+    @property
+    def free_cash(self):
+        return self.cash - self.freeze_cash
+        
     def append_waiting_trade(self, trade: Trade):
         x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
                            trade.direction, trade.amount,
-                           trade.volume, trade.par_amount]],
+                           trade.volume, trade.par_amount, trade.is_settled]],
                          columns=['bond_code', 'settlement_date',
                                   'direction', 'amount',
-                                  'volume', 'par_amount'])
+                                  'volume', 'par_amount', 'is_settled'],
+                         index=[trade.id])
+
         if hasattr(trade, 'in_bond_code'):
             x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
                                trade.direction, trade.amount,
-                               trade.volume, trade.par_amount, trade.in_bond_code]],
+                               trade.volume, trade.par_amount, trade.in_bond_code, 
+                               trade.is_settled]],
                              columns=['bond_code', 'settlement_date',
                                       'direction', 'amount',
-                                      'volume', 'par_amount', 'in_bond_code'])
-        self.waiting_trade = self.waiting_trade.append(x)
-        self.waiting_trade.index = range(self.waiting_trade.shape[0])
+                                      'volume', 'par_amount', 'in_bond_code',
+                                      'is_settled'],
+                             index=[trade.id])
+        self.all_trade = self.all_trade.append(x)
 
     def bonds_add(self, trade):
         # 债券记加
@@ -87,9 +106,8 @@ class Portfolio:
         # 更新现券交易的交易所T+1交易
         # 当交易参数中：是今天的最后一笔交易时，才执行该函数
         # 找到所有挂起交易中今天可以结算的交易
-        print(self.waiting_trade)
-        trades = self.waiting_trade[(self.waiting_trade.settlement_date == self.now_time) &
-                                    ((self.waiting_trade.direction == "买入") | (self.waiting_trade.direction == "卖出"))]
+        trades = self.all_trade[(self.all_trade.settlement_date == self.now_time) &
+                                ((self.all_trade.direction == "买入") | (self.all_trade.direction == "卖出"))]
         if trades.shape[0] == 0:
             return
         for i in trades.index:
@@ -108,16 +126,14 @@ class Portfolio:
                 self.cash += each_trade.amount
                 if each_trade.bond_code[-2:] == "IB":
                     self.bonds_minus(each_trade)
-        self.waiting_trade = self.waiting_trade.drop(trades.index.to_list())
 
     def portfolio_update_transfer(self):
         # 更新转托管的T+1或T+2的记加 - 转入账户
-        trades = self.waiting_trade[(self.waiting_trade.settlement_date == self.now_time) & (
-            self.waiting_trade.direction == "转托管")]
+        trades = self.all_trade[(self.all_trade.settlement_date == self.now_time) & (
+            self.all_trade.direction == "转托管")]
         if trades.shape[0] == 0:
             return
         for i in trades.index:
             each_trade = trades.loc[i, :]
             each_trade.bond_code = each_trade.in_bond_code
             self.bonds_add(each_trade)
-        self.waiting_trade = self.waiting_trade.drop(trades.index.to_list())

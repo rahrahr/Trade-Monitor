@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>620</width>
-    <height>274</height>
+    <width>713</width>
+    <height>338</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,9 +31,9 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>0</y>
-      <width>581</width>
+      <x>20</x>
+      <y>40</y>
+      <width>650</width>
       <height>221</height>
      </rect>
     </property>
@@ -63,13 +63,6 @@
       <widget class="QLabel" name="label_21">
        <property name="text">
         <string>资金头寸</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>转入账户</string>
        </property>
       </widget>
      </item>
@@ -190,13 +183,20 @@
      <item row="3" column="4">
       <widget class="QLineEdit" name="in_code"/>
      </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>转入账户</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
    <widget class="QPushButton" name="is_last_trade">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>230</y>
+      <x>20</x>
+      <y>280</y>
       <width>133</width>
       <height>32</height>
      </rect>

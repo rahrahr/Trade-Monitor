@@ -73,7 +73,7 @@ class Ui(QtWidgets.QMainWindow):
         self._export_trader_info()
         x = compliance.check_spot_order()
         if x != '交易成功':
-            error_message = '报单失败，失败原因：\n'+'\n!'.join(x.split('！'))
+            error_message = '报单失败，失败原因：\n'+'!\n'.join(x.split('！'))
             QtWidgets.QMessageBox().about(self, '错误信息', error_message)
             return False
 
@@ -123,12 +123,12 @@ class Ui(QtWidgets.QMainWindow):
             portfolio_utils.to_json(self.portfolios[trade.other_inside_id])
 
         QtWidgets.QMessageBox().about(self, '', '报单完成')
-
+    
     def sendTransferOrder(self):
         self.transfer_ui._export_transfer_info()
         x = compliance.check_transfer_order()
         if x != '交易成功':
-            error_message = '转托管报单失败，失败原因：\n'+'\n!'.join(x.split('！'))
+            error_message = '转托管报单失败，失败原因：\n'+'!\n'.join(x.split('！'))
             QtWidgets.QMessageBox().about(self, '错误信息', error_message)
             return False
 

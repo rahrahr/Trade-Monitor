@@ -24,7 +24,7 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
             return False
 
         try:
-            quote = excel_utils.get_quote(code, trade_date)
+            quote = excel_utils.get_quote(code)
             self.zhongzhai_clean_price.setText(
                 '{:.4f}'.format(quote['中债估值']['净价']))
             self.zhongzhai_ytm.setText(
