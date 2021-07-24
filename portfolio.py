@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from trade import *
 import pandas as pd
 import numpy as np
-from utils import *
+from utils import portfolio_utils
 
 
 @dataclass

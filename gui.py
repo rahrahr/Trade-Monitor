@@ -2,7 +2,7 @@ import datetime
 import json
 import re
 from copy import deepcopy
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from QuantLib import Date, China, Period
 import traceback
 
@@ -196,22 +196,34 @@ class Ui(QtWidgets.QMainWindow):
             temp_portfolio = deepcopy(self.portfolios[key])
             temp_portfolio.settle()
             bonds_not_enough = temp_portfolio.bonds[temp_portfolio.bonds['par_amount'] < 0]
-            if not bonds_not_enough.empty():
+            if not bonds_not_enough.empty:
                 x = bonds_not_enough['bond_code'].to_list()
                 msg = ['{}-{}现券持仓不足'.format(key, i) for i in x]
                 prompt_msg.extend(msg)
+            # display current positions
+            displayDataFrame(temp_portfolio.bonds, key, self)
+
+        msg = QtWidgets.QMessageBox()
+        text = "若不进行转托管操作，账户持仓如下，请选择是否进行接下去的操作"
+        msg.setText(text)
+        msg.setWindowTitle("请选择")
+        msg.setStandardButtons(
+            QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
+        retval = msg.exec_()
+        if retval == QtWidgets.QMessageBox.No:
+            #中止本函数运行
+            return
 
         if prompt_msg:
-            QMessageBox = QtWidgets.QMessageBox
-            msg = QMessageBox()
+            msg = QtWidgets.QMessageBox()
             text = "更新持仓中止，以下现券不足，请选择是否进行自动内部转托管\n" + '\n'.join(prompt_msg)
             msg.setText(text)
             msg.setWindowTitle("持仓不足警示")
-            msg.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+            msg.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
             retval = msg.exec_()
 
             # 若选择Yes，则进入此分支，进行自动转托管
-            if retval == QMessageBox.Yes:
+            if retval == QtWidgets.QMessageBox.Yes:
                 self.autoTransfer()
                 QtWidgets.QMessageBox().about(self, '提示信息', '自动转托管完成，请再次点击“完成今日交易”按钮')
                 return
@@ -265,3 +277,38 @@ class Ui(QtWidgets.QMainWindow):
             temp_portfolios[key] = deepcopy(self.portfolios[key])
             temp_portfolios[key].settle()
             bonds_not_enough = temp_portfolios[key].bonds[temp_portfolios.bonds['par_amount'] < 0]
+
+
+class PandasModel(QtCore.QAbstractTableModel):
+
+    def __init__(self, data):
+        QtCore.QAbstractTableModel.__init__(self)
+        self._data = data
+
+    def rowCount(self, parent=None):
+        return self._data.shape[0]
+
+    def columnCount(self, parnet=None):
+        return self._data.shape[1]
+
+    def data(self, index, role=QtCore.Qt.DisplayRole):
+        if index.isValid():
+            if role == QtCore.Qt.DisplayRole:
+                return str(self._data.iloc[index.row(), index.column()])
+        return None
+
+    def headerData(self, col, orientation, role):
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            return self._data.columns[col]
+        return None
+
+
+def displayDataFrame(df, title='', parent=None):
+    popup = QtWidgets.QDialog(parent=parent)
+    # popup.setWindowTitle(title)
+    popup.view = QtWidgets.QTableView()
+    model = PandasModel(df)
+    popup.view.setModel(model)
+    popup.view.resize(800, 400)
+    popup.view.setWindowTitle(title)
+    popup.view.show()

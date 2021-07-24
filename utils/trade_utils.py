@@ -3,9 +3,6 @@ import xlwings as xw
 import pandas as pd
 import json
 import datetime
-import sys
-sys.path.append("..")
-from utils import *
 
 _xlsx_path = json.load(
     open('settings.json'), encoding='utf-8')["Trade Monitor Path"]
