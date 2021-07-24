@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from trade import *
 import pandas as pd
-import portfolio_utils
+import numpy as np
+from utils import *
+
 
 @dataclass
 class Portfolio:
@@ -21,24 +23,25 @@ class Portfolio:
                                       columns=['bond_code', 'settlement_date',
                                                'direction', 'amount',
                                                'volume', 'par_amount', 'in_bond_code', 'is_settled'])
+        self.failed_trade = pd.DataFrame(None,
+                                         columns=['bond_code', 'settlement_date',
+                                                  'direction', 'amount',
+                                                  'volume', 'par_amount', 'in_bond_code', 'is_settled'])
 
     @property
     def waiting_trade(self):
-        # return all unsetlled T+1 trades
+        # 保存所有当日不进行结算的交易
         return self.all_trade[self.all_trade.settlement_date > self.now_time]
 
     @property
     def waiting_settlement(self):
-        # return all unsetlled trades that is settled today
-        return self.all_trade[~self.all_trade.is_settled]
+        # 保存所有当日进行结算的交易
+        return self.all_trade[(self.all_trade.settlement_date == self.now_time) & (~self.all_trade.is_settled)]
 
     @property
     def free_cash(self):
         return self.cash - self.freeze_cash
 
-    def settle(self):
-        pass
-    
     def append_waiting_trade(self, trade: Trade):
         x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
                            trade.direction, trade.amount,
@@ -59,6 +62,27 @@ class Portfolio:
                                       'is_settled'],
                              index=[trade.id])
         self.all_trade = self.all_trade.append(x)
+
+    def append_failed_trade(self, trade):
+        x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
+                           trade.direction, trade.amount,
+                           trade.volume, trade.par_amount, trade.is_settled]],
+                         columns=['bond_code', 'settlement_date',
+                                  'direction', 'amount',
+                                  'volume', 'par_amount', 'is_settled'],
+                         index=[trade.id])
+
+        if hasattr(trade, 'in_bond_code'):
+            x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
+                               trade.direction, trade.amount,
+                               trade.volume, trade.par_amount, trade.in_bond_code,
+                               trade.is_settled]],
+                             columns=['bond_code', 'settlement_date',
+                                      'direction', 'amount',
+                                      'volume', 'par_amount', 'in_bond_code',
+                                      'is_settled'],
+                             index=[trade.id])
+        self.failed_trade = self.failed_trade.append(x)
 
     def bonds_add(self, trade):
         # 债券记加
@@ -88,62 +112,175 @@ class Portfolio:
             self.bonds.number = list(range(1, self.bonds.shape[0] + 1))
 
     def portfolio_update_t0(self, trade: Trade):
-        # 更新现券交易的银行间T+0交易
         # 更新现券交易的交易所T+1交易时的T+0的现券转移部分，资金转移放在T+1函数内结算
-        # 更新转托管T+0的记减 - 转出账户
-        # 对于单个账户只会存在t+0的一笔交易
+        # 买入 - 冻结资金增加； 卖出 - 冻结资金不变
+        if trade.bond_code[-2:] == "IB" or trade.direction == "转托管":
+            return
         self.now_time = trade.trade_time
         if trade.direction == "买入":
-            self.cash = self.cash - \
-                trade.amount if trade.bond_code[-2:] == "IB" else self.cash
+            self.freeze_cash += trade.amount
             self.bonds_add(trade)
         elif trade.direction == "卖出":
-            self.cash = self.cash + \
-                trade.amount if trade.bond_code[-2:] == "IB" else self.cash
-            self.bonds_minus(trade)
-        elif trade.direction == "转托管":
             self.bonds_minus(trade)
 
     def portfolio_update_t1(self):
-        # 更新现券交易的银行间T+1交易
-        # 更新现券交易的交易所T+1交易
-        # 当交易参数中：是今天的最后一笔交易时，才执行该函数
-        # 找到所有挂起交易中今天可以结算的交易
-        trades = self.all_trade[(self.all_trade.settlement_date == self.now_time) &
-                                ((self.all_trade.direction == "买入") | (self.all_trade.direction == "卖出"))]
+        # 现券交易 - 交易所T+1 - 结算
+        # Assumption: 一定结算成功
+        trades = self.waiting_settlement[(self.waiting_settlement.bond_code[-2:] != "IB") &
+                                         ((self.waiting_settlement.direction == "买入") | (self.waiting_settlement.direction == "卖出"))]
         if trades.shape[0] == 0:
             return
         for i in trades.index:
             each_trade = trades.loc[i, :]
-            print(each_trade)
             if each_trade.direction == "买入":
-                if self.cash >= each_trade.amount:  # 符合条件，扣减资金，不更新交易
-                    self.cash -= each_trade.amount
-                    if each_trade.bond_code[-2:] == "IB":
-                        self.bonds_add(each_trade)
-                else:  # 不符合条件，资金不变，冲销交易
-                    if each_trade.bond_code[-2:] != "IB":
-                        self.bonds_minus(each_trade)
+                self.cash -= each_trade.amount
+                self.freeze_cash -= each_trade.amount
             elif each_trade.direction == "卖出":
-                # 作为卖方，默认对方不会违约
                 self.cash += each_trade.amount
-                if each_trade.bond_code[-2:] == "IB":
-                    self.bonds_minus(each_trade)
+            self.all_trade.loc[i, "is_settled"] = True
 
-    def portfolio_update_transfer(self):
+    def transfer_amount_adjust(self, trade):
+        # 根据目前尚存的债券数量，对执行的转托管进行调整
+        temp_ = self.bonds.loc[self.bonds.bond_code == trade.bond_code,
+                               "par_amount"] if trade.bond_code in self.bonds.bond_code.to_list() else 0
+        trade.par_amount = min(trade.par_amount, temp_)
+        trade.volume = trade.par_amount / 100
+        trade.amount = min(trade.amount, temp_ * trade.amount/trade.par_amount)
+
+        self.all_trade.loc[(self.all_trade.index == trade.name) & (
+            self.all_trade.direction == "转托管"), "par_amount"] = trade.par_amount
+        self.all_trade.loc[(self.all_trade.index == trade.name) & (
+            self.all_trade.direction == "转托管"), "volume"] = trade.volume
+        self.all_trade.loc[(self.all_trade.index == trade.name) & (
+            self.all_trade.direction == "转托管"), "amount"] = trade.amount
+        self.all_trade.loc[(self.all_trade.index == trade.name) & (
+            self.all_trade.direction == "转托管-转入"), "par_amount"] = trade.par_amount
+        self.all_trade.loc[(self.all_trade.index == trade.name) & (
+            self.all_trade.direction == "转托管-转入"), "volume"] = trade.volume
+        self.all_trade.loc[(self.all_trade.index == trade.name) & (
+            self.all_trade.direction == "转托管-转入"), "amount"] = trade.amount
+        return trade
+
+    def portfolio_update_transfer(self, direction="out"):
+        # 更新转托管的T+0的记减 - 转出账户
+        if direction == "out":
+            trades = self.waiting_settlement[self.waiting_settlement.direction == "转托管"]
+            if trades.shape[0] == 0:
+                return
+            for i in trades.index:
+                each_trade = trades.loc[i, :]
+                each_trade = self.transfer_amount_adjust(
+                    each_trade)  # 对转托管的量进行调整
+                if each_trade.par_amount > 0:  # 只有当账户内还存在对应债券时，才会进行转托管
+                    self.bonds_minus(each_trade)
+                    self.all_trade.loc[(self.all_trade.index == i) & (
+                        self.all_trade.direction == "转托管"), "is_settled"].iloc[0] = True
         # 更新转托管的T+1或T+2的记加 - 转入账户
-        trades = self.all_trade[(self.all_trade.settlement_date == self.now_time) & (
-            self.all_trade.direction == "转托管")]
-        if trades.shape[0] == 0:
-            return
-        for i in trades.index:
-            each_trade = trades.loc[i, :]
-            each_trade.bond_code = each_trade.in_bond_code
-            self.bonds_add(each_trade)
+        elif direction == "in":
+            trades = self.waiting_settlement[self.waiting_settlement.direction == "转托管-转入"]
+            if trades.shape[0] == 0:
+                return
+            for i in trades.index:
+                if self.all_trade.loc[(self.all_trade.index == i) & (self.all_trade.direction == "转托管"), "is_settled"].iloc[0]:
+                    each_trade = trades.loc[i, :]
+                    self.bonds_add(each_trade)
+                    self.all_trade.loc[(self.all_trade.index == i) & (
+                        self.all_trade.direction == "转托管-转入"), "is_settled"].iloc[0] = True
+
+    def get_NIB_(self, code_trade):
+        # 银行间交易单代码结算逻辑
+        # 判断能否全部结算
+        code = code_trade["bond_code"].iloc[0]
+        net_sell_bond = code_trade.loc[code_trade.direction == "卖出", "par_amount"].sum(
+        ) - code_trade.loc[code_trade.direction == "买入", "par_amount"].sum()
+
+        net_cost_cash = code_trade.loc[code_trade.direction == "买入", "amount"].sum(
+        ) - code.trade.loc[code_trade.direction == "卖出", "amount"].sum()
+
+        if net_sell_bond <= self.bonds.loc[self.bonds.bond_code == code, "par_amount"] and net_cost_cash <= self.cash:
+            for i in code_trade.index:
+                self.all_trade.loc[i, "is_settled"] = True  # 所有交易均能结算
+            self.cash -= net_cost_cash
+            if net_sell_bond < self.bonds.loc[self.bonds.bond_code == code, "par_amount"]:
+                self.bonds.loc[self.bonds.bond_code ==
+                               code, "volume"] -= net_sell_bond / 100
+                self.bonds.loc[self.bonds.bond_code ==
+                               code, "par_amount"] -= net_sell_bond
+                self.bonds.loc[self.bonds.bond_code ==
+                               code, "amount"] += net_cost_cash
+            else:
+                self.bonds = self.bonds[self.bonds.bond_code != code]
+                self.bonds.number = list(range(1, self.bonds.shape[0] + 1))
+        # 如果不能全部结算，则将不满足条件的去除，剩余的结算
+        else:
+            sell_trade = code_trade.loc[code_trade.direction == "卖出"]
+            buy_trade = code_trade.loc[code_trade.direction == "买入"]
+            if net_sell_bond > self.bonds.loc[self.bonds.bond_code == code, "par_amount"]:
+                # 卖多了，则从卖出的交易中去除
+                max_sell_bond = self.bonds.loc[self.bonds.bond_code ==
+                                               code, "par_amount"]
+                a = sell_trade["par_amount"].to_list()
+                b = np.zeros(len(a))
+                self.get_nearst(a, begin=0, b=b, M=max_sell_bond)
+                for i in range(len(b)):
+                    each_trade = sell_trade.iloc[i, :]
+                    if b[i]:
+                        self.cash += each_trade.amount
+                        self.bonds_minus(each_trade)
+                        self.all_trade.loc[self.all_trade.index ==
+                                           each_trade.name, "is_settled"] = True
+                    else:
+                        self.append_failed_trade(each_trade)
+                # 买入的交易全部执行
+                for i in buy_trade.index:
+                    each_trade = buy_trade.loc[i, :]
+                    self.cash -= each_trade.amount
+                    self.bonds_add(each_trade)
+                    self.all_trade.loc[self.all_trade.index ==
+                                       i, "is_settled"] = True
+            elif net_cost_cash > self.cash:
+                # 买多了，则从买入的交易中去除
+                max_buy_cash = self.cash
+                a = buy_trade["amount"].to_list()
+                b = np.zeros(len(a))
+                self.get_nearst(a, begin=0, b=b, M=max_buy_cash)
+                for i in range(len(b)):
+                    each_trade = buy_trade.iloc[i, :]
+                    if b[i]:
+                        self.cash -= each_trade.amount
+                        self.bonds_add(each_trade)
+                        self.all_trade.loc[self.all_trade.index ==
+                                           each_trade.name, "is_settled"] = True
+                    else:
+                        self.append_failed_trade(each_trade)
+                # 卖出的交易全部执行
+                for i in sell_trade.index:
+                    each_trade = sell_trade.loc[i, :]
+                    self.cash += each_trade.amount
+                    self.bonds_minus(each_trade)
+                    self.all_trade.loc[self.all_trade.index ==
+                                       i, "is_settled"] = True
+
+    def settle(self):
+        # 单个账户结算
+        # 交易所T+1的全部结算成功
+        self.portfolio_update_t1()
+        # 银行间T+1和T+0的结算排序结算
+        trades = self.waiting_settlement[(self.waiting_settlement.bond_code[-2:] == "IB") &
+                                         ((self.waiting_settlement.direction == "买入") | (self.waiting_settlement.direction == "卖出"))]
+        trades = trades.sort_values(by=["direction", "par_amount"], ascending=(
+            False, False))  # 先卖出后买入，票面金额从大到小排序
+        code_sig = trades.drop_duplicates(
+            subset=["bond_code"]).bond_code.to_list()
+        for code in code_sig:
+            code_trade = trades.loc[trades.bonds_code == code]
+            self.get_NIB_(code_trade)
+        # 转托管结算
+        self.portfolio_update_transfer(direction="out")
 
     def to_excel(self):
         portfolio_utils.to_excel(self)
-    
+
     def to_json(self):
         portfolio_utils.to_json(self)
 
@@ -151,3 +288,23 @@ class Portfolio:
         log_name = 'logs/log_{}_{}.csv'.format(
             self.account, self.now_time.replace('/', ''))
         self.all_trade.to_csv(log_name)
+
+    def get_nearst(self, a, begin, b, M):
+        # 递归函数，找到一组数中间和最接近且小于M的组合
+        if begin >= len(a):
+            return M
+        k1 = self.get_nearst(a, begin + 1, b, M - a[begin])
+        k2 = self.get_nearst(a, begin + 1, b, M)
+        if k1 >= 0 and k2 >= 0:
+            if k1 <= k2:
+                b[begin] = True
+                return self.get_nearst(a, begin + 1, b, M - a[begin])
+            else:
+                b[begin] = False
+                return self.get_nearst(a, begin + 1, b, M)
+        if k1 >= 0 and k2 < 0:
+            b[begin] = True
+            return self.get_nearst(a, begin + 1, b, M - a[begin])
+        if k1 < 0:
+            b[begin] = False
+            return self.get_nearst(a, begin + 1, b, M)

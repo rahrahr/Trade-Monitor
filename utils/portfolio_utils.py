@@ -1,6 +1,9 @@
 import xlwings as xw
 import pandas as pd
 import json
+import sys
+sys.path.append("..")
+from utils import *
 from portfolio import Portfolio
 
 _xlsx_path = json.load(

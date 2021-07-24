@@ -1,6 +1,7 @@
 import datetime
 import json
 import re
+from copy import deepcopy
 from PyQt5 import QtWidgets, uic
 from QuantLib import Date, China, Period
 import traceback
@@ -98,18 +99,20 @@ class Ui(QtWidgets.QMainWindow):
                 account = trade.inside_id
                 if trade.bond_code[-2:] != "IB":
                     self.portfolios[account].portfolio_update_t0(trade)
+                self.portfolios[account].portfolio_update_t0(trade)
                 self.portfolios[account].append_waiting_trade(trade)
 
             if trade.is_inside_trade:
+                account = trade.other_inside_id
                 if trade.settlement_days == 'T+0':
-                    account = trade.other_inside_id
                     self.portfolios[account].portfolio_update_t0(
                         trade.reversed())
                 elif trade.settlement_days == 'T+1':
-                    account = trade.other_inside_id
                     if trade.bond_code[-2:] != "IB":
                         self.portfolios[account].portfolio_update_t0(
                             trade.reversed())
+                    self.portfolios[account].portfolio_update_t0(
+                        trade.reversed())
                     self.portfolios[account].append_waiting_trade(
                         trade.reversed())
 
@@ -141,6 +144,8 @@ class Ui(QtWidgets.QMainWindow):
 
         try:
             trade = trade_utils.create_transfer_trade()
+            trade_ = deepcopy(trade)
+            trade.settlement_date = trade.trade_time
         except:
             QtWidgets.QMessageBox().about(self, '错误信息', traceback.format_exc())
             return False
@@ -151,11 +156,10 @@ class Ui(QtWidgets.QMainWindow):
             account = trade.inside_id
             self.portfolios[account].portfolio_update_t0(trade)
 
-            if trade.is_inside_trade:
-                account = trade.other_inside_id
-                self.portfolios[account].portfolio_update_t0(trade.reversed())
-                self.portfolios[account].append_waiting_trade(
-                    trade.reversed())
+            account = trade.other_inside_id
+            self.portfolios[account].portfolio_update_t0(trade_.reversed())
+            self.portfolios[account].append_waiting_trade(
+                trade_.reversed())
 
         except:
             QtWidgets.QMessageBox().about(
@@ -176,55 +180,88 @@ class Ui(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox().about(self, '', '报单完成')
 
     def sendSettlement(self):
-        #当前账户提交清算申请
+        # 当前账户提交清算申请
         list_type = self.trader_ui.list_type.currentText()
         trader_id = self.trader_ui.account_list.currentText()
         key = list_type + trader_id
-        
+
         self.portfolios[key].settle()
         QtWidgets.QMessageBox().about(self, '', '结算报单完成')
 
     def updateTplus1(self):
+        # 更新明天到账的T+1交易，调用后now_time会+1
+        # 首先检查是否存在需要弥补交易
+        prompt_msg = []
+        for key in self.portfolios:
+            temp_portfolio = deepcopy(self.portfolios[key])
+            temp_portfolio.settle()
+            bonds_not_enough = temp_portfolio.bonds[temp_portfolio.bonds['par_amount'] < 0]
+            if not bonds_not_enough.empty():
+                x = bonds_not_enough['bond_code'].to_list()
+                msg = ['{}-{}现券持仓不足'.format(key, i) for i in x]
+                prompt_msg.extend(msg)
+
+        if prompt_msg:
+            QMessageBox = QtWidgets.QMessageBox
+            msg = QMessageBox()
+            text = "更新持仓中止，以下现券不足，请选择是否进行自动内部转托管\n" + '\n'.join(prompt_msg)
+            msg.setText(text)
+            msg.setWindowTitle("持仓不足警示")
+            msg.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+            retval = msg.exec_()
+
+            # 若选择Yes，则进入此分支，进行自动转托管
+            if retval == QMessageBox.Yes:
+                self.autoTransfer()
+                QtWidgets.QMessageBox().about(self, '提示信息', '自动转托管完成，请再次点击“完成今日交易”按钮')
+                return
+            # 若不选择，则继续更新T+1持仓
+
+        # 更新T+1
         cal = China(China.IB)
         for key in self.portfolios:
             date = self.portfolios[key].now_time
             if isinstance(date, datetime.datetime):
-                date = date.date().isoformat()
-                date = '/'.join([i.lstrip('0') for i in date.split('-')])
+                date = date.date().isoformat().replace('-', '/')
             x = date.split('/')
             ql_date = Date(int(x[2]), int(x[1]), int(x[0]))
             next_trading_day = cal.advance(
                 ql_date, Period('1D')).ISO().split('-')
-            next_trading_day = ql_date.ISO().split('-')
-            next_trading_day = '/'.join([x.lstrip('0')
-                                         for x in next_trading_day])
+            next_trading_day = ql_date.ISO().replace('-', '/')
             self.portfolios[key].now_time = next_trading_day
             self.portfolios[key].portfolio_update_t1()
 
-            portfolio_utils.to_excel(self.portfolios[key])
-            portfolio_utils.to_json(self.portfolios[key])
+            self.portfolios[key].to_excel()
+            self.portfolios[key].to_json()
             self.portfolios[key].log()
 
         QtWidgets.QMessageBox().about(self, '', '更新完成')
 
     def updateTransfer(self):
+        # 更新明天到账的转托管交易，调用后now_time会+1
         cal = China(China.IB)
         for key in self.portfolios:
             date = self.portfolios[key].now_time
             if isinstance(date, datetime.datetime):
-                date = date.date().isoformat()
-                date = '/'.join([i.lstrip('0') for i in date.split('-')])
+                date = date.date().isoformat().replace('-', '/')
             x = date.split('/')
             ql_date = Date(int(x[2]), int(x[1]), int(x[0]))
             next_trading_day = cal.advance(
-                ql_date, Period('1D')).ISO().split('-')
-            next_trading_day = '/'.join([x.lstrip('0')
-                                         for x in next_trading_day])
+                ql_date, Period('1D')).ISO().replace('-', '/')
             self.portfolios[key].now_time = next_trading_day
             self.portfolios[key].portfolio_update_transfer()
 
-            portfolio_utils.to_excel(self.portfolios[key])
-            portfolio_utils.to_json(self.portfolios[key])
+            self.portfolios[key].to_excel()
+            self.portfolios[key].to_json()
             self.portfolios[key].log()
 
         QtWidgets.QMessageBox().about(self, '', '更新完成')
+
+    def autoTransfer(self):
+        # 判断各内部账户中是否存在互补，并进行提示
+        # 转托管仍需要手动输入
+        temp_portfolios = {}
+        for key in self.portfolios:
+            temp_portfolios[key] = deepcopy(self.portfolios[key])
+            temp_portfolios[key].settle()
+            bonds_not_enough = temp_portfolios[key].bonds[temp_portfolios.bonds['par_amount'] < 0]

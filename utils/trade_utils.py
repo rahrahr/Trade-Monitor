@@ -24,12 +24,10 @@ def create_spot_trade() -> Trade:
     trade_time = last_trade.loc['交易时间']
     settlement_date = last_trade.loc['结算日期']
     if isinstance(trade_time, datetime.datetime):
-        trade_time = trade_time.date().isoformat()
-        trade_time = '/'.join([i.lstrip('0') for i in trade_time.split('-')])
+        trade_time = trade_time.date().isoformat().replace('-', '/')
 
     if isinstance(settlement_date, datetime.datetime):
-        settlement_date = settlement_date.date().isoformat()
-        settlement_date = '/'.join([i.lstrip('0') for i in settlement_date.split('-')])
+        settlement_date = settlement_date.date().isoformat().replace('-', '/')
     settlement_days = last_trade.loc['券清算速度']
     direction = last_trade.loc['交易方向']
 
@@ -46,7 +44,7 @@ def create_spot_trade() -> Trade:
                  inside_id, other_inside_id)
 
 
-def create_transfer_trade():
+def create_transfer_trade() -> Trade:
     last_trade = trade_record_sheet.range(
         'A1').expand().options(pd.DataFrame).value.loc[2, :]
     bond_code = last_trade.loc["债券代码"]
@@ -59,13 +57,10 @@ def create_transfer_trade():
     trade_time = last_trade.loc['交易时间']
     settlement_date = last_trade.loc['结算日期']
     if isinstance(trade_time, datetime.datetime):
-        trade_time = trade_time.date().isoformat()
-        trade_time = '/'.join([i.lstrip('0') for i in trade_time.split('-')])
+        trade_time = trade_time.date().isoformat().replace('-', '/')
 
     if isinstance(settlement_date, datetime.datetime):
-        settlement_date = settlement_date.date().isoformat()
-        settlement_date = '/'.join([i.lstrip('0') for i in settlement_date.split('-')])
-
+        settlement_date = settlement_date.date().isoformat().replace('-', '/')
     settlement_days = last_trade.loc['券清算速度']
     direction = last_trade.loc['交易方向']
 
