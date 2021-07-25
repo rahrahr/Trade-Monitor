@@ -97,8 +97,7 @@ class Ui(QtWidgets.QMainWindow):
             self.portfolios[account].append_waiting_trade(trade)
             self.portfolios[account].portfolio_update_t0(trade)
             print(self.portfolios[account].all_trade)
-            print(self.portfolios[account].now_time,
-                  type(self.portfolios[account].now_time))
+            print(self.portfolios[account].now_time, type(self.portfolios[account].now_time))
             print(type(self.portfolios[account].all_trade.iloc[0, 1]))
 
             if trade.is_inside_trade:
@@ -215,7 +214,7 @@ class Ui(QtWidgets.QMainWindow):
         return prompt_msg, retval
 
     def updateTplus1(self):
-        # 更新明天到账的T+1交易
+        # 更新明天到账的T+1交易，调用后now_time会+1
         # 首先检查是否存在需要弥补交易
         prompt_msg, retval = self.checkSufficiency()
         if retval == QtWidgets.QMessageBox.No:
@@ -260,7 +259,7 @@ class Ui(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox().about(self, '', '更新完成')
 
     def updateTransfer(self):
-        # 更新明天到账的转托管交易
+        # 更新明天到账的转托管交易，调用后now_time会+1
         cal = China(China.IB)
         for key in self.portfolios:
             date = self.portfolios[key].now_time
@@ -271,8 +270,7 @@ class Ui(QtWidgets.QMainWindow):
             next_trading_day = cal.advance(
                 ql_date, Period('1D')).ISO().replace('-', '/')
             self.portfolios[key].now_time = next_trading_day
-            other_portfolios = [self.portfolios[i]
-                                for i in self.portfolios if i != key]
+            other_portfolios = [self.portfolios[i] for i in self.portfolios if i != key]
             self.portfolios[key].portfolio_update_transfer(direction='in',
                                                            other_portfolios=other_portfolios)
             self.portfolios[key].now_time = date
@@ -293,9 +291,6 @@ class Ui(QtWidgets.QMainWindow):
             bonds_not_enough = temp_portfolios[key].bonds[temp_portfolios.bonds['par_amount'] < 0]
             temp_portfolios[key].unfilled = bonds_not_enough
 
-        for key in temp_portfolios:
-            pass
-
     def hintFailures(self):
         popup = QtWidgets.QMainWindow(parent=self)
         mainlayout = QtWidgets.QVBoxLayout()
@@ -306,7 +301,7 @@ class Ui(QtWidgets.QMainWindow):
         msg = QtWidgets.QMessageBox()
         msg.setText("结算报单完成，该账户以下Trade属于Failed Trade")
         mainlayout.addWidget(msg)
-
+        
         list_type = self.trader_ui.list_type.currentText()
         trader_id = self.trader_ui.account_list.currentText()
         key = list_type + trader_id
@@ -316,8 +311,6 @@ class Ui(QtWidgets.QMainWindow):
         mainlayout.addWidget(df)
         popup.resize(600, 600)
         popup.show()
-
-
 class PandasModel(QtCore.QAbstractTableModel):
 
     def __init__(self, data):
