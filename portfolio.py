@@ -126,7 +126,7 @@ class Portfolio:
     def portfolio_update_t1(self):
         # 现券交易 - 交易所T+1 - 结算
         # Assumption: 一定结算成功
-        trades = self.waiting_settlement[(self.waiting_settlement.bond_code.map(lambda x:x[-2:] == 'IB')) &
+        trades = self.waiting_settlement[(self.waiting_settlement.bond_code.map(lambda x:x[-2:] != "IB")) &
                                          ((self.waiting_settlement.direction == "买入") | (self.waiting_settlement.direction == "卖出"))]
         if trades.shape[0] == 0:
             return
@@ -195,13 +195,13 @@ class Portfolio:
         ) - code_trade.loc[code_trade.direction == "买入", "par_amount"].sum()
 
         net_cost_cash = code_trade.loc[code_trade.direction == "买入", "amount"].sum(
-        ) - code.trade.loc[code_trade.direction == "卖出", "amount"].sum()
+        ) - code_trade.loc[code_trade.direction == "卖出", "amount"].sum()
 
-        if net_sell_bond <= self.bonds.loc[self.bonds.bond_code == code, "par_amount"] and net_cost_cash <= self.cash:
+        if net_sell_bond <= self.bonds.loc[self.bonds.bond_code == code, "par_amount"].iloc[0] and net_cost_cash <= self.cash:
             for i in code_trade.index:
                 self.all_trade.loc[i, "is_settled"] = True  # 所有交易均能结算
             self.cash -= net_cost_cash
-            if net_sell_bond < self.bonds.loc[self.bonds.bond_code == code, "par_amount"]:
+            if net_sell_bond < self.bonds.loc[self.bonds.bond_code == code, "par_amount"].iloc[0]:
                 self.bonds.loc[self.bonds.bond_code ==
                                code, "volume"] -= net_sell_bond / 100
                 self.bonds.loc[self.bonds.bond_code ==
@@ -266,14 +266,14 @@ class Portfolio:
         # 交易所T+1的全部结算成功
         self.portfolio_update_t1()
         # 银行间T+1和T+0的结算排序结算
-        trades = self.waiting_settlement[(self.waiting_settlement.bond_code.map(lambda x:x[-2:]!='IB')) &
+        trades = self.waiting_settlement[(self.waiting_settlement.bond_code.map(lambda x:x[-2:] == "IB")) &
                                          ((self.waiting_settlement.direction == "买入") | (self.waiting_settlement.direction == "卖出"))]
         trades = trades.sort_values(by=["direction", "par_amount"], ascending=(
             False, False))  # 先卖出后买入，票面金额从大到小排序
         code_sig = trades.drop_duplicates(
             subset=["bond_code"]).bond_code.to_list()
         for code in code_sig:
-            code_trade = trades.loc[trades.bonds_code == code]
+            code_trade = trades.loc[trades.bond_code == code]
             self.get_NIB_(code_trade)
         # 转托管结算
         self.portfolio_update_transfer(direction="out")

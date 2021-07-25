@@ -86,6 +86,7 @@ class Ui(QtWidgets.QMainWindow):
 
         try:
             trade = trade_utils.create_spot_trade()
+            print(trade.trade_time, type(trade.trade_time))
         except:
             QtWidgets.QMessageBox().about(self, '错误信息', traceback.format_exc())
             return False
@@ -95,6 +96,9 @@ class Ui(QtWidgets.QMainWindow):
             account = trade.inside_id
             self.portfolios[account].append_waiting_trade(trade)
             self.portfolios[account].portfolio_update_t0(trade)
+            print(self.portfolios[account].all_trade)
+            print(self.portfolios[account].now_time, type(self.portfolios[account].now_time))
+            print(type(self.portfolios[account].all_trade.iloc[0, 1]))
 
             if trade.is_inside_trade:
                 account = trade.other_inside_id
@@ -203,6 +207,7 @@ class Ui(QtWidgets.QMainWindow):
         msg.setStandardButtons(
             QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
         mainlayout.addWidget(msg)
+        popup.resize(600, 600)
         popup.show()
         retval = msg.exec_()
         popup.close()
