@@ -1,0 +1,4 @@
+,bond_code,settlement_date,direction,amount,volume,par_amount,in_bond_code,is_settled
+0,210205.IB,2021/07/14,买入,30999870.0,300000,30000000.0,,True
+1,210303.IB,2021/07/15,卖出,10038610.0,100000,10000000.0,,False
+4,210006.IB,2021/07/14,转托管,20000000.0,200000.0,20000000.0,019654.SH,True
