@@ -17,7 +17,7 @@ def create_portfolio(account: str) -> Portfolio:
     now_time = sheet.range('B2').value
     if isinstance(now_time, datetime.datetime):
         now_time = now_time.date().isoformat().replace('-', '/')
-        
+
     bonds = sheet.range('A4').expand().options(pd.DataFrame, index=False).value
 
     bonds.columns = ["number", "bond_code",

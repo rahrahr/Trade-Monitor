@@ -178,7 +178,7 @@ class Ui(QtWidgets.QMainWindow):
         key = list_type + trader_id
 
         self.portfolios[key].settle()
-        QtWidgets.QMessageBox().about(self, '', '结算报单完成')
+        self.hintFailures()
 
     def checkSufficiency(self):
         prompt_msg = []
@@ -250,6 +250,7 @@ class Ui(QtWidgets.QMainWindow):
             next_trading_day = ql_date.ISO().replace('-', '/')
             self.portfolios[key].now_time = next_trading_day
             self.portfolios[key].portfolio_update_t1()
+            self.portfolios[key].now_time = date
 
             self.portfolios[key].to_excel()
             self.portfolios[key].to_json()
@@ -270,6 +271,7 @@ class Ui(QtWidgets.QMainWindow):
                 ql_date, Period('1D')).ISO().replace('-', '/')
             self.portfolios[key].now_time = next_trading_day
             self.portfolios[key].portfolio_update_transfer()
+            self.portfolios[key].now_time = date
 
             self.portfolios[key].to_excel()
             self.portfolios[key].to_json()
@@ -285,8 +287,28 @@ class Ui(QtWidgets.QMainWindow):
             temp_portfolios[key] = deepcopy(self.portfolios[key])
             temp_portfolios[key].settle()
             bonds_not_enough = temp_portfolios[key].bonds[temp_portfolios.bonds['par_amount'] < 0]
+            temp_portfolios[key].unfilled = bonds_not_enough
 
+    def hintFailures(self):
+        popup = QtWidgets.QMainWindow(parent=self)
+        mainlayout = QtWidgets.QVBoxLayout()
+        widget = QtWidgets.QWidget()
+        widget.setLayout(mainlayout)
+        popup.setCentralWidget(widget)
 
+        msg = QtWidgets.QMessageBox()
+        msg.setText("结算报单完成，该账户以下Trade属于Failed Trade")
+        mainlayout.addWidget(msg)
+        
+        list_type = self.trader_ui.list_type.currentText()
+        trader_id = self.trader_ui.account_list.currentText()
+        key = list_type + trader_id
+        df = self.portfolios[key].failed_trade
+        df = displayDataFrame(df, key, self)
+
+        mainlayout.addWidget(df)
+        popup.resize(600, 600)
+        popup.show()
 class PandasModel(QtCore.QAbstractTableModel):
 
     def __init__(self, data):
