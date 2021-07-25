@@ -92,29 +92,16 @@ class Ui(QtWidgets.QMainWindow):
 
         # 更新Portfolio对象
         try:
-            if trade.settlement_days == 'T+0':
-                account = trade.inside_id
-                self.portfolios[account].portfolio_update_t0(trade)
-            elif trade.settlement_days == 'T+1':
-                account = trade.inside_id
-                if trade.bond_code[-2:] != "IB":
-                    self.portfolios[account].portfolio_update_t0(trade)
-                self.portfolios[account].portfolio_update_t0(trade)
-                self.portfolios[account].append_waiting_trade(trade)
+            account = trade.inside_id
+            self.portfolios[account].append_waiting_trade(trade)
+            self.portfolios[account].portfolio_update_t0(trade)
 
             if trade.is_inside_trade:
                 account = trade.other_inside_id
-                if trade.settlement_days == 'T+0':
-                    self.portfolios[account].portfolio_update_t0(
-                        trade.reversed())
-                elif trade.settlement_days == 'T+1':
-                    if trade.bond_code[-2:] != "IB":
-                        self.portfolios[account].portfolio_update_t0(
-                            trade.reversed())
-                    self.portfolios[account].portfolio_update_t0(
-                        trade.reversed())
-                    self.portfolios[account].append_waiting_trade(
-                        trade.reversed())
+                self.portfolios[account].append_waiting_trade(
+                    trade.reversed())
+                self.portfolios[account].portfolio_update_t0(
+                    trade.reversed())
 
         except:
             QtWidgets.QMessageBox().about(
@@ -154,12 +141,13 @@ class Ui(QtWidgets.QMainWindow):
         try:
             trade.settlement_days == 'T+1'
             account = trade.inside_id
+            self.portfolios[account].append_waiting_trade(trade)
             self.portfolios[account].portfolio_update_t0(trade)
 
             account = trade.other_inside_id
-            self.portfolios[account].portfolio_update_t0(trade_.reversed())
             self.portfolios[account].append_waiting_trade(
                 trade_.reversed())
+            self.portfolios[account].portfolio_update_t0(trade_.reversed())
 
         except:
             QtWidgets.QMessageBox().about(

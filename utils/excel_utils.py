@@ -31,7 +31,8 @@ def _export_info(mainwindow):
     sheet = spot_sheet
     # clearing previous info
     sheet.range('C2:C9').value = 0
-    sheet.range('E2:E8').value = 0
+    sheet.range('E2:E5').value = 0
+    sheet.range('E7:E8').value = 0
 
     # write new info
     sheet.range('C4').value = mainwindow.code.text()
