@@ -13,6 +13,7 @@ spot_sheet = book.sheets['现券交易-债券要素']
 transfer_sheet = book.sheets['转托管-债券要素']
 code_sheet = book.sheets['获取全部代码']
 
+
 def get_quote(code: str) -> dict:
     # 获取前一天的中债估值等数据
     spot_sheet.range('C4').value = code
@@ -36,16 +37,17 @@ def _export_info(mainwindow):
     sheet.range('C4').value = mainwindow.code.text()
     sheet.range('C5').value = mainwindow.face_value.text()
     sheet.range('C6').value = mainwindow.clean_price.text()
+    sheet.range('C7').value = mainwindow.ytm.text()
+    sheet.range('C8').value = mainwindow.full_price.text()
     sheet.range('C9').value = mainwindow.settlement_method.currentText()
 
     sheet.range('E4').value = mainwindow.trade_direction.currentText()
     sheet.range('E5').value = mainwindow.settlement_days.currentText()
-    sheet.range(
-        'E10').value = mainwindow.zhongzhai_clean_price_deviation_pct.text()
-    sheet.range(
-        'E11').value = mainwindow.qingsuansuo_clean_price_deviation_pct.text()
-    sheet.range(
-        'E12').value = mainwindow.zhongzheng_clean_price_deviation_pct.text()
+    # Not actually settlement date
+    sheet.range('C3').value = mainwindow.trade_date.text()
+    sheet.range('E7').value = mainwindow.accrued_interest.text()
+    sheet.range('E8').value = mainwindow.settlement_amount.text()
+
     book.app.calculate()
     mainwindow.settlement_amount_capitalized.setText(
         str(sheet.range('E9').value))
@@ -61,7 +63,7 @@ def _export_trader_info(mainwindow):
     current_value[2] = mainwindow.counterparty_ui.counterparty_type.currentText()
     current_value[3] = mainwindow.counterparty_ui.counterparty_list.currentText()
     book.app.calculate()
-    
+
     sheet.range('B2:E2').value = current_value
 
 
@@ -90,6 +92,6 @@ def _export_transfer_info(mainwindow):
     mainwindow.transfer_finish_date.setText(str(sheet.range('E7').value))
     mainwindow.transfer_amount.setText(str(sheet.range('E8').value))
 
-def get_all_codes(code: str):
-    sheet.range('B5').value = code
 
+def get_all_codes(code: str):
+    code_sheet.range('B5').value = code
