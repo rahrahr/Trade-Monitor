@@ -39,7 +39,7 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
                 '{:.4f}'.format(quote['中证估值']['净价']))
             self.zhongzheng_ytm.setText('{:.4f}'.format(quote['中证估值']['YTM']))
         except:
-            QtWidgets.QMessageBox().about(self, '错误信息', '获取估值失败')
+            QtWidgets.QMessageBox().about(self, '错误信息', '获取估值失败\n' + traceback.format_exc())
             return False
 
         utils.set_deviation(self, clean_price)

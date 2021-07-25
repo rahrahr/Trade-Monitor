@@ -40,6 +40,7 @@ class Trade:
     def reversed(self):
         if hasattr(self, 'in_bond_code'):
             #转托管
+            reversed_direction = '转托管-转入'
             trade = Trade(self.in_bond_code, self.amount,
                           self.par_amount, self.volume,
                           self.trade_time, self.settlement_date,
