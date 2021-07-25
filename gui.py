@@ -188,10 +188,14 @@ class Ui(QtWidgets.QMainWindow):
         self.portfolios[key].settle()
         QtWidgets.QMessageBox().about(self, '', '结算报单完成')
 
-    def updateTplus1(self):
-        # 更新明天到账的T+1交易，调用后now_time会+1
-        # 首先检查是否存在需要弥补交易
+    def checkSufficiency(self):
         prompt_msg = []
+        popup = QtWidgets.QMainWindow(parent=self)
+        mainlayout = QtWidgets.QVBoxLayout()
+        widget = QtWidgets.QWidget()
+        widget.setLayout(mainlayout)
+        popup.setCentralWidget(widget)
+
         for key in self.portfolios:
             temp_portfolio = deepcopy(self.portfolios[key])
             temp_portfolio.settle()
@@ -201,7 +205,8 @@ class Ui(QtWidgets.QMainWindow):
                 msg = ['{}-{}现券持仓不足'.format(key, i) for i in x]
                 prompt_msg.extend(msg)
             # display current positions
-            displayDataFrame(temp_portfolio.bonds, key, self)
+            df_ = displayDataFrame(temp_portfolio.bonds, key, self)
+            mainlayout.addWidget(df_)
 
         msg = QtWidgets.QMessageBox()
         text = "若不进行转托管操作，账户持仓如下，请选择是否进行接下去的操作"
@@ -209,9 +214,18 @@ class Ui(QtWidgets.QMainWindow):
         msg.setWindowTitle("请选择")
         msg.setStandardButtons(
             QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
+        mainlayout.addWidget(msg)
+        popup.show()
         retval = msg.exec_()
+        popup.close()
+        return prompt_msg, retval
+
+    def updateTplus1(self):
+        # 更新明天到账的T+1交易，调用后now_time会+1
+        # 首先检查是否存在需要弥补交易
+        prompt_msg, retval = self.checkSufficiency()
         if retval == QtWidgets.QMessageBox.No:
-            #中止本函数运行
+            # 中止本函数运行
             return
 
         if prompt_msg:
@@ -219,7 +233,8 @@ class Ui(QtWidgets.QMainWindow):
             text = "更新持仓中止，以下现券不足，请选择是否进行自动内部转托管\n" + '\n'.join(prompt_msg)
             msg.setText(text)
             msg.setWindowTitle("持仓不足警示")
-            msg.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
+            msg.setStandardButtons(
+                QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
             retval = msg.exec_()
 
             # 若选择Yes，则进入此分支，进行自动转托管
@@ -277,7 +292,7 @@ class Ui(QtWidgets.QMainWindow):
             temp_portfolios[key] = deepcopy(self.portfolios[key])
             temp_portfolios[key].settle()
             bonds_not_enough = temp_portfolios[key].bonds[temp_portfolios.bonds['par_amount'] < 0]
-            
+
 
 class PandasModel(QtCore.QAbstractTableModel):
 
@@ -304,11 +319,11 @@ class PandasModel(QtCore.QAbstractTableModel):
 
 
 def displayDataFrame(df, title='', parent=None):
-    popup = QtWidgets.QDialog(parent=parent)
-    # popup.setWindowTitle(title)
+    popup = QtWidgets.QMainWindow(parent=parent)
+    popup.setWindowTitle(title)
     popup.view = QtWidgets.QTableView()
     model = PandasModel(df)
     popup.view.setModel(model)
     popup.view.resize(800, 400)
-    popup.view.setWindowTitle(title)
-    popup.view.show()
+    popup.setCentralWidget(popup.view)
+    return popup
