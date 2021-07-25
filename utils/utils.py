@@ -4,7 +4,9 @@ import time
 
 calculator_path = json.load(
     open('settings.json'), encoding='utf-8')["Calculator Path"]
-calculator = xw.Book(calculator_path).sheets['Bond Calculator!']
+book = xw.Book(calculator_path)
+book.app.calculation = 'manual'
+calculator = book.sheets['Bond Calculator!']
 
 
 def get_numbers(code: str, clean_price: str,
@@ -15,7 +17,7 @@ def get_numbers(code: str, clean_price: str,
     calculator.range('C5').value = clean_price
     calculator.range('C8').value = settlement_days
 
-    time.sleep(8)
+    book.app.calculate()
     ytm_ = xw.Book(calculator_path).macro("模块1.到期收益率_get")
     ytm_()
 

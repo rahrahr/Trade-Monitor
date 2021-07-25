@@ -6,8 +6,9 @@ import datetime
 
 _xlsx_path = json.load(
     open('settings.json'), encoding='utf-8')["Trade Monitor Path"]
-trade_record_sheet = xw.Book(_xlsx_path).sheets['最终交易记录']
-transfer_sheet = xw.Book(_xlsx_path).sheets['转托管-债券要素']
+book = xw.Book(_xlsx_path)
+trade_record_sheet = book.sheets['最终交易记录']
+transfer_sheet = book.sheets['转托管-债券要素']
 
 
 def create_spot_trade() -> Trade:

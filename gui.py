@@ -277,7 +277,7 @@ class Ui(QtWidgets.QMainWindow):
             temp_portfolios[key] = deepcopy(self.portfolios[key])
             temp_portfolios[key].settle()
             bonds_not_enough = temp_portfolios[key].bonds[temp_portfolios.bonds['par_amount'] < 0]
-
+            
 
 class PandasModel(QtCore.QAbstractTableModel):
 

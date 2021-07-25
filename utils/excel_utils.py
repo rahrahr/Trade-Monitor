@@ -7,13 +7,16 @@ import json
 
 _xlsx_path = json.load(
     open('settings.json'), encoding='utf-8')["Trade Monitor Path"]
-spot_sheet = xw.Book(_xlsx_path).sheets['现券交易-债券要素']
-transfer_sheet = xw.Book(_xlsx_path).sheets['转托管-债券要素']
-
+book = xw.Book(_xlsx_path)
+book.app.calculation = 'manual'
+spot_sheet = book.sheets['现券交易-债券要素']
+transfer_sheet = book.sheets['转托管-债券要素']
+code_sheet = book.sheets['获取全部代码']
 
 def get_quote(code: str) -> dict:
     # 获取前一天的中债估值等数据
     spot_sheet.range('C4').value = code
+    book.app.calculate()
     result = {'中债估值': {'净价': spot_sheet.range('C10').value,
                        'YTM': spot_sheet.range('C13').value},
               '清算所估值': {'净价': spot_sheet.range('C11').value,
@@ -52,6 +55,7 @@ def _export_info(mainwindow):
         'E11').value = mainwindow.qingsuansuo_clean_price_deviation_pct.text()
     sheet.range(
         'E12').value = mainwindow.zhongzheng_clean_price_deviation_pct.text()
+    book.app.calculate()
     mainwindow.settlement_amount_capitalized.setText(
         str(sheet.range('E9').value))
 
@@ -65,7 +69,8 @@ def _export_trader_info(mainwindow):
     current_value[1] = mainwindow.trader_ui.account_list.currentText()
     current_value[2] = mainwindow.counterparty_ui.counterparty_type.currentText()
     current_value[3] = mainwindow.counterparty_ui.counterparty_list.currentText()
-
+    book.app.calculate()
+    
     sheet.range('B2:E2').value = current_value
 
 
@@ -88,7 +93,12 @@ def _export_transfer_info(mainwindow):
     sheet.range('C6').value = target_exchange
     sheet.range('C7').value = transfer_start_date
     sheet.range('C8').value = transfer_amount
+    book.app.calculate()
 
     mainwindow.in_code.setText(str(sheet.range('E6').value))
     mainwindow.transfer_finish_date.setText(str(sheet.range('E7').value))
     mainwindow.transfer_amount.setText(str(sheet.range('E8').value))
+
+def get_all_codes(code: str):
+    sheet.range('B5').value = code
+
