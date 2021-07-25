@@ -2,6 +2,7 @@ import xlwings as xw
 import pandas as pd
 import json
 import sys
+import datetime
 from portfolio import Portfolio
 
 _xlsx_path = json.load(
@@ -12,7 +13,11 @@ book = xw.Book(_xlsx_path)
 def create_portfolio(account: str) -> Portfolio:
     sheet = book.sheets[account]
     cash = float(sheet.range('D2').value)
+
     now_time = sheet.range('B2').value
+    if isinstance(now_time, datetime.datetime):
+        now_time = now_time.date().isoformat().replace('-', '/')
+        
     bonds = sheet.range('A4').expand().options(pd.DataFrame, index=False).value
 
     bonds.columns = ["number", "bond_code",

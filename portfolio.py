@@ -126,7 +126,7 @@ class Portfolio:
     def portfolio_update_t1(self):
         # 现券交易 - 交易所T+1 - 结算
         # Assumption: 一定结算成功
-        trades = self.waiting_settlement[(self.waiting_settlement.bond_code[-2:] != "IB") &
+        trades = self.waiting_settlement[(self.waiting_settlement.bond_code.map(lambda x:x[-2:] == 'IB')) &
                                          ((self.waiting_settlement.direction == "买入") | (self.waiting_settlement.direction == "卖出"))]
         if trades.shape[0] == 0:
             return
@@ -266,7 +266,7 @@ class Portfolio:
         # 交易所T+1的全部结算成功
         self.portfolio_update_t1()
         # 银行间T+1和T+0的结算排序结算
-        trades = self.waiting_settlement[(self.waiting_settlement.bond_code[-2:] == "IB") &
+        trades = self.waiting_settlement[(self.waiting_settlement.bond_code.map(lambda x:x[-2:]=='IB')) &
                                          ((self.waiting_settlement.direction == "买入") | (self.waiting_settlement.direction == "卖出"))]
         trades = trades.sort_values(by=["direction", "par_amount"], ascending=(
             False, False))  # 先卖出后买入，票面金额从大到小排序
