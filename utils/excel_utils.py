@@ -36,19 +36,10 @@ def _export_info(mainwindow):
     sheet.range('C4').value = mainwindow.code.text()
     sheet.range('C5').value = mainwindow.face_value.text()
     sheet.range('C6').value = mainwindow.clean_price.text()
-    sheet.range('C7').value = mainwindow.ytm.text()
-    sheet.range('C8').value = mainwindow.full_price.text()
     sheet.range('C9').value = mainwindow.settlement_method.currentText()
-    sheet.range('C10').value = mainwindow.zhongzhai_clean_price.text()
-    sheet.range('C11').value = mainwindow.qingsuansuo_clean_price.text()
-    sheet.range('C12').value = mainwindow.zhongzheng_clean_price.text()
 
     sheet.range('E4').value = mainwindow.trade_direction.currentText()
     sheet.range('E5').value = mainwindow.settlement_days.currentText()
-    # Not actually settlement date
-    sheet.range('C3').value = mainwindow.trade_date.text()
-    sheet.range('E7').value = mainwindow.accrued_interest.text()
-    sheet.range('E8').value = mainwindow.settlement_amount.text()
     sheet.range(
         'E10').value = mainwindow.zhongzhai_clean_price_deviation_pct.text()
     sheet.range(
