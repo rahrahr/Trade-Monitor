@@ -87,6 +87,8 @@ class Ui(QtWidgets.QMainWindow):
         try:
             trade = trade_utils.create_spot_trade()
             print(trade.trade_time, type(trade.trade_time))
+            print(trade.settlement_date, type(trade.settlement_date))
+
         except:
             QtWidgets.QMessageBox().about(self, '错误信息', traceback.format_exc())
             return False
@@ -97,8 +99,9 @@ class Ui(QtWidgets.QMainWindow):
             self.portfolios[account].append_waiting_trade(trade)
             self.portfolios[account].portfolio_update_t0(trade)
             print(self.portfolios[account].all_trade)
-            print(self.portfolios[account].now_time, type(self.portfolios[account].now_time))
-            print(type(self.portfolios[account].all_trade.iloc[0, 1]))
+            print(self.portfolios[account].now_time)
+            # print(self.portfolios[account].now_time, type(self.portfolios[account].now_time))
+            # print(type(self.portfolios[account].all_trade.iloc[0, 1]))
 
             if trade.is_inside_trade:
                 account = trade.other_inside_id
@@ -126,7 +129,7 @@ class Ui(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox().about(self, '', '报单完成')
 
     def sendTransferOrder(self):
-        self.transfer_ui._export_transfer_info()
+        # self.transfer_ui._export_transfer_info()
         x = compliance.check_transfer_order()
         if x != '交易成功':
             error_message = '转托管报单失败，失败原因：\n'+'!\n'.join(x.split('！'))
@@ -136,7 +139,9 @@ class Ui(QtWidgets.QMainWindow):
         try:
             trade = trade_utils.create_transfer_trade()
             trade_ = deepcopy(trade)
+            print(trade.settlement_date)
             trade.settlement_date = trade.trade_time
+            print(trade_.settlement_date)
         except:
             QtWidgets.QMessageBox().about(self, '错误信息', traceback.format_exc())
             return False
@@ -178,6 +183,9 @@ class Ui(QtWidgets.QMainWindow):
         key = list_type + trader_id
 
         self.portfolios[key].settle()
+        self.portfolios[key].to_json()
+        self.portfolios[key].to_excel()
+
         self.hintFailures()
 
     def checkSufficiency(self):
@@ -311,6 +319,8 @@ class Ui(QtWidgets.QMainWindow):
         mainlayout.addWidget(df)
         popup.resize(600, 600)
         popup.show()
+
+
 class PandasModel(QtCore.QAbstractTableModel):
 
     def __init__(self, data):

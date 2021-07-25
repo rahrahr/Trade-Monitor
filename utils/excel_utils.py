@@ -32,6 +32,8 @@ def get_quote(code: str) -> dict:
 def _export_info(mainwindow):
     sheet = spot_sheet
     # clearing previous info
+    book.app.calculation = 'manual'
+
     sheet.range('C2:C9').value = 0
     sheet.range('E2:E5').value = 0
     sheet.range('E7:E8').value = 0
@@ -52,6 +54,7 @@ def _export_info(mainwindow):
     sheet.range('E8').value = mainwindow.settlement_amount.text()
 
     book.app.calculate()
+    book.app.calculation = 'automatic'
     mainwindow.settlement_amount_capitalized.setText(
         str(sheet.range('E9').value))
 
@@ -59,15 +62,17 @@ def _export_info(mainwindow):
 def _export_trader_info(mainwindow):
     sheet = spot_sheet
     current_value = sheet.range('B2:E2').value
+    book.app.calculation = 'manual'
 
     # write new info
     current_value[0] = mainwindow.trader_ui.list_type.currentText()
     current_value[1] = mainwindow.trader_ui.account_list.currentText()
     current_value[2] = mainwindow.counterparty_ui.counterparty_type.currentText()
     current_value[3] = mainwindow.counterparty_ui.counterparty_list.currentText()
-    book.app.calculate()
 
     sheet.range('B2:E2').value = current_value
+    book.app.calculate()
+    book.app.calculation = 'automatic'
 
 
 def _export_transfer_info(mainwindow):
@@ -83,13 +88,17 @@ def _export_transfer_info(mainwindow):
     transfer_start_date = mainwindow.transfer_start_date.text()
     transfer_amount = mainwindow.lineEdit.text()
 
+    book.app.calculation = 'manual'
+
     sheet.range('C2').value = out_account_key_2
     sheet.range('E2').value = in_account_key_2
     sheet.range('C4').value = out_code
     sheet.range('C6').value = target_exchange
     sheet.range('C7').value = transfer_start_date
     sheet.range('C8').value = transfer_amount
+
     book.app.calculate()
+    book.app.calculation = 'automatic'
 
     mainwindow.in_code.setText(str(sheet.range('E6').value))
     mainwindow.transfer_finish_date.setText(str(sheet.range('E7').value))

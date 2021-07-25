@@ -1,0 +1,2 @@
+,bond_code,settlement_date,direction,amount,volume,par_amount,in_bond_code,is_settled
+0,210006.IB,2021/07/15,转托管,1000000.0,10000,1000000.0,019654.SH,False

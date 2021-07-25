@@ -12,6 +12,9 @@ transfer_sheet = book.sheets['转托管-债券要素']
 
 
 def create_spot_trade() -> Trade:
+    book.app.calculation = 'manual'
+    book.app.calculate()
+
     last_trade = trade_record_sheet.range(
         'A1').expand().options(pd.DataFrame).value.loc[1, :]
     bond_code = last_trade.loc["债券代码"]
@@ -35,6 +38,8 @@ def create_spot_trade() -> Trade:
     inside_id = last_trade.loc['账户组'] + last_trade.loc['交易账户']
     other_inside_id = last_trade.loc['交易对手组'] + last_trade.loc['交易对手']
 
+    book.app.calculation = 'automatic'
+
     return Trade(bond_code, amount,
                  par_amount, volume,
                  trade_time, settlement_date, settlement_days,
@@ -43,6 +48,9 @@ def create_spot_trade() -> Trade:
 
 
 def create_transfer_trade() -> Trade:
+    book.app.calculation = 'manual'
+    book.app.calculate()
+
     last_trade = trade_record_sheet.range(
         'A1').expand().options(pd.DataFrame).value.loc[2, :]
     bond_code = last_trade.loc["债券代码"]
@@ -68,6 +76,7 @@ def create_transfer_trade() -> Trade:
     inside_id = last_trade.loc['账户组'] + last_trade.loc['交易账户']
     other_inside_id = last_trade.loc['交易对手组'] + last_trade.loc['交易对手']
 
+    book.app.calculation = 'automatic'
     trade = Trade(bond_code, amount,
                  par_amount, volume,
                  trade_time, settlement_date, settlement_days,
