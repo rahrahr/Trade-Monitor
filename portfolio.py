@@ -161,7 +161,7 @@ class Portfolio:
             self.all_trade.direction == "转托管-转入"), "amount"] = trade.amount
         return trade
 
-    def portfolio_update_transfer(self, direction="out"):
+    def portfolio_update_transfer(self, direction="out", other_portfolios=[]):
         # 更新转托管的T+0的记减 - 转出账户
         if direction == "out":
             trades = self.waiting_settlement[self.waiting_settlement.direction == "转托管"]

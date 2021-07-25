@@ -51,3 +51,9 @@ def to_json(portfolio: Portfolio):
 
     with open('trader.json', 'w') as f:
         json.dump(json_, f)
+
+def find_reflective_trades(a:Portfolio, b: Portfolio):
+    # Find whether transfer orders in b has been successfully settled in A.
+    transfer_ids = set(a.all_trade.index) and set(b.all_trade.index)
+    result = a.loc[transfer_ids, 'is_settled'].to_dict()
+    return result
