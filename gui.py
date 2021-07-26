@@ -262,6 +262,7 @@ class Ui(QtWidgets.QMainWindow):
 
             self.portfolios[key].to_excel()
             self.portfolios[key].to_json()
+            self.portfolios[key].save_position()
             self.portfolios[key].log()
 
         QtWidgets.QMessageBox().about(self, '', '更新完成')
@@ -285,6 +286,7 @@ class Ui(QtWidgets.QMainWindow):
 
             self.portfolios[key].to_excel()
             self.portfolios[key].to_json()
+            self.portfolios[key].save_position()
             self.portfolios[key].log()
 
         QtWidgets.QMessageBox().about(self, '', '更新完成')
