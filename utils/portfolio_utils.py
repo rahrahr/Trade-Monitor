@@ -22,6 +22,7 @@ def create_portfolio(account: str) -> Portfolio:
 
 def read_bond_position(account: str):
     sheet = book.sheets[account]
+    bonds = sheet.range('A4').expand().options(pd.DataFrame, index=False).value
     bonds.columns = ["number", "bond_code",
                      "par_amount", "volume",
                      "amount"]
@@ -35,6 +36,7 @@ def to_excel(portfolio: Portfolio):
     sheet.range('D2').value = portfolio.cash
     sheet.range('F2').value = portfolio.free_cash
 
+    sheet.range('A4').expand().value = None
     bonds = portfolio.bonds.set_index('number')
     bonds.columns = ['债券代码', '券面金额（元）', '持仓量（张）', '金额金额（元）']
     bonds.index.name = '编号'

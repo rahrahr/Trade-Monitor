@@ -45,6 +45,7 @@ class Ui(QtWidgets.QMainWindow):
 
         # create Portfolio instances for all accounts.
         self.portfolios = {}
+        self.bond_info_ui.initial_portfolios = {}
         portflios = json.load(open('trader.json', encoding='utf-8'))
         for key_1 in portflios.keys():
             for key_2, item_2 in portflios[key_1].items():
@@ -54,6 +55,11 @@ class Ui(QtWidgets.QMainWindow):
                 # Makes it easier to update json file
                 self.portfolios[key_1 + key_2].key_1 = key_1
                 self.portfolios[key_1 + key_2].key_2 = key_2
+
+                self.bond_info_ui.initial_portfolios[key_1 + key_2] =\
+                    portfolio_utils.create_portfolio(account)
+                self.bond_info_ui.initial_portfolios[key_1 + key_2].bonds =\
+                    self.bond_info_ui.initial_portfolios[key_1 + key_2].bonds.copy()
 
     def getPosition(self):
         trader_position = json.load(open('trader.json', encoding='utf-8'))[
@@ -279,7 +285,8 @@ class Ui(QtWidgets.QMainWindow):
             next_trading_day = cal.advance(
                 ql_date, Period('1D')).ISO().replace('-', '/')
             self.portfolios[key].now_time = next_trading_day
-            other_portfolios = [self.portfolios[i] for i in self.portfolios if i != key]
+            other_portfolios = [self.portfolios[i]
+                                for i in self.portfolios if i != key]
             self.portfolios[key].portfolio_update_transfer(direction='in',
                                                            other_portfolios=other_portfolios)
             self.portfolios[key].now_time = date
@@ -311,7 +318,7 @@ class Ui(QtWidgets.QMainWindow):
         msg = QtWidgets.QMessageBox()
         msg.setText("结算报单完成，该账户以下Trade属于Failed Trade")
         mainlayout.addWidget(msg)
-        
+
         list_type = self.trader_ui.list_type.currentText()
         trader_id = self.trader_ui.account_list.currentText()
         key = list_type + trader_id

@@ -133,3 +133,6 @@ dmypy.json
 *.docx
 *.xlsx
 *.xlsm
+logs/
+.idea/
+historic_positions/
