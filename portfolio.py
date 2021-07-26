@@ -118,9 +118,9 @@ class Portfolio:
     def portfolio_update_t0(self, trade: Trade):
         # 更新现券交易的交易所T+1交易时的T+0的现券转移部分，资金转移放在T+1函数内结算
         # 买入 - 冻结资金增加； 卖出 - 冻结资金不变
+        self.now_time = trade.trade_time
         if trade.bond_code[-2:] == "IB" or trade.direction == "转托管":
             return
-        self.now_time = trade.trade_time
         if trade.direction == "买入":
             self.freeze_cash += trade.amount
             self.bonds_add(trade)
@@ -214,7 +214,7 @@ class Portfolio:
             for i in code_trade.index:
                 self.all_trade.loc[i, "is_settled"] = True  # 所有交易均能结算
             self.cash -= net_cost_cash
-            if net_sell_bond < self.bonds.loc[self.bonds.bond_code == code, "par_amount"].iloc[0]:
+            if net_sell_bond < max_sell_bond:
                 self.bonds.loc[self.bonds.bond_code ==
                                code, "volume"] -= net_sell_bond / 100
                 self.bonds.loc[self.bonds.bond_code ==
@@ -228,7 +228,7 @@ class Portfolio:
         else:
             sell_trade = code_trade.loc[code_trade.direction == "卖出"]
             buy_trade = code_trade.loc[code_trade.direction == "买入"]
-            if net_sell_bond > self.bonds.loc[self.bonds.bond_code == code, "par_amount"].iloc[0]:
+            if net_sell_bond > max_sell_bond:
                 # 卖多了，则从卖出的交易中去除
                 a = sell_trade["par_amount"].to_list()
                 self.b = np.zeros(len(a))
@@ -241,7 +241,8 @@ class Portfolio:
                         self.all_trade.loc[self.all_trade.index ==
                                            each_trade.name, "is_settled"] = True
                     else:
-                        self.append_failed_trade(each_trade)
+                        if each_trade.name not in self.failed_trade.index.to_list():
+                            self.append_failed_trade(each_trade)
                 # 买入的交易全部执行
                 for i in buy_trade.index:
                     each_trade = buy_trade.loc[i, :]
@@ -263,7 +264,8 @@ class Portfolio:
                         self.all_trade.loc[self.all_trade.index ==
                                            each_trade.name, "is_settled"] = True
                     else:
-                        self.append_failed_trade(each_trade)
+                        if each_trade.name not in self.failed_trade.index.to_list():
+                            self.append_failed_trade(each_trade)
                 # 卖出的交易全部执行
                 for i in sell_trade.index:
                     each_trade = sell_trade.loc[i, :]
@@ -288,6 +290,10 @@ class Portfolio:
             self.get_NIB_(code_trade)
         # 转托管结算
         self.portfolio_update_transfer(direction="out")
+        # 将现券交易的failed_trade里的False变为True
+        for i in self.failed_trade.index:
+            if (self.all_trade.loc[i, "direction"] == "买入" or self.all_trade.loc[i, "direction"] == "卖出") and self.all_trade.loc[i, "is_settled"]:
+                self.failed_trade.loc[i, "is_settled"] = True
 
     def to_excel(self):
         portfolio_utils.to_excel(self)

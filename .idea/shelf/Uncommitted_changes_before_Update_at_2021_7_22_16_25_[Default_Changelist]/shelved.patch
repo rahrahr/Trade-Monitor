@@ -1,0 +1,145 @@
+Index: trade.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from dataclasses import dataclass\r\nfrom itertools import count\r\n\r\n@dataclass\r\nclass Trade:\r\n    '''\r\n    记录一笔交易的基本信息\r\n    '''\r\n    id = count()\r\n    def __init__(self,\r\n                 bond_code: str = '',\r\n                 amount: float = 0,\r\n                 par_amount: float = 10,\r\n                 volume: int = 10,\r\n                 trade_time: str = '2021-07-01',\r\n                 settlement_date: str = '2021-07-01',\r\n                 settlement_days: str = '2021-07-01',\r\n                 direction: str = '买入',\r\n                 is_inside_trade: bool = False,\r\n                 inside_id: str = '',\r\n                 other_inside_id: str = ''):\r\n\r\n        self.id = next(Trade.id)\r\n        self.bond_code: str = bond_code\r\n        self.amount: float = amount\r\n        self.par_amount: float = par_amount\r\n        self.volume: int = volume\r\n\r\n        self.trade_time: str = trade_time\r\n        self.settlement_date: str = settlement_date\r\n        self.settlement_days: str = settlement_days\r\n        self.is_settled: bool = False\r\n        self.direction: str = direction\r\n\r\n        self.is_inside_trade: bool = is_inside_trade\r\n        self.inside_id: str = inside_id\r\n        if is_inside_trade:\r\n            self.other_inside_id = other_inside_id\r\n\r\n    def reversed(self):\r\n        if hasattr(self, 'in_bond_code'):\r\n            #转托管\r\n            trade = Trade(self.in_bond_code, self.amount,\r\n                          self.par_amount, self.volume,\r\n                          self.trade_time, self.settlement_date,\r\n                          self.settlement_days, reversed_direction,\r\n                          self.is_inside_trade, self.other_inside_id,\r\n                          self.inside_id)\r\n            trade.in_bond_code = self.bond_code\r\n            trade.id = self.id\r\n            return trade\r\n            \r\n        reversed_direction = \"卖出\" if self.direction == \"买入\" else \"买入\"\r\n        return Trade(self.bond_code, self.amount,\r\n                     self.par_amount, self.volume,\r\n                     self.trade_time, self.settlement_date,\r\n                     self.settlement_days, reversed_direction,\r\n                     self.is_inside_trade, self.other_inside_id,\r\n                     self.inside_id)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/trade.py b/trade.py
+--- a/trade.py	(revision e4a422bc5fca803eb85c53825203cf0dbbec2919)
++++ b/trade.py	(date 1626941821435)
+@@ -40,6 +40,7 @@
+     def reversed(self):
+         if hasattr(self, 'in_bond_code'):
+             #转托管
++            reversed_direction = '转托管-转入'
+             trade = Trade(self.in_bond_code, self.amount,
+                           self.par_amount, self.volume,
+                           self.trade_time, self.settlement_date,
+Index: portfolio.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from dataclasses import dataclass\r\nfrom trade import *\r\nimport pandas as pd\r\nimport portfolio_utils\r\n\r\n@dataclass\r\nclass Portfolio:\r\n    # 记录投资组合\r\n    def __init__(self,\r\n                 account: str,\r\n                 now_time: str,\r\n                 cash: float,\r\n                 bonds: pd.DataFrame):\r\n\r\n        self.account = account\r\n        self.now_time = now_time\r\n        self.cash = cash\r\n        self.freeze_cash = 0\r\n        self.bonds = bonds\r\n        self.all_trade = pd.DataFrame(None,\r\n                                      columns=['bond_code', 'settlement_date',\r\n                                               'direction', 'amount',\r\n                                               'volume', 'par_amount', 'in_bond_code', 'is_settled'])\r\n\r\n    @property\r\n    def waiting_trade(self):\r\n        # return all unsetlled T+1 trades\r\n        return self.all_trade[self.all_trade.settlement_date > self.now_time]\r\n\r\n    @property\r\n    def waiting_settlement(self):\r\n        # return all unsetlled trades that is settled today\r\n        return self.all_trade[~self.all_trade.is_settled]\r\n\r\n    @property\r\n    def free_cash(self):\r\n        return self.cash - self.freeze_cash\r\n\r\n    def append_waiting_trade(self, trade: Trade):\r\n        x = pd.DataFrame([[trade.bond_code, trade.settlement_date,\r\n                           trade.direction, trade.amount,\r\n                           trade.volume, trade.par_amount, trade.is_settled]],\r\n                         columns=['bond_code', 'settlement_date',\r\n                                  'direction', 'amount',\r\n                                  'volume', 'par_amount', 'is_settled'],\r\n                         index=[trade.id])\r\n\r\n        if hasattr(trade, 'in_bond_code'):\r\n            x = pd.DataFrame([[trade.bond_code, trade.settlement_date,\r\n                               trade.direction, trade.amount,\r\n                               trade.volume, trade.par_amount, trade.in_bond_code,\r\n                               trade.is_settled]],\r\n                             columns=['bond_code', 'settlement_date',\r\n                                      'direction', 'amount',\r\n                                      'volume', 'par_amount', 'in_bond_code',\r\n                                      'is_settled'],\r\n                             index=[trade.id])\r\n        self.all_trade = self.all_trade.append(x)\r\n\r\n    def bonds_add(self, trade):\r\n        # 债券记加\r\n        if trade.bond_code in self.bonds.bond_code.to_list():\r\n            self.bonds.loc[self.bonds.bond_code ==\r\n                           trade.bond_code, \"volume\"] += trade.volume\r\n            self.bonds.loc[self.bonds.bond_code ==\r\n                           trade.bond_code, \"par_amount\"] += trade.par_amount\r\n            self.bonds.loc[self.bonds.bond_code ==\r\n                           trade.bond_code, \"amount\"] += trade.amount\r\n        else:\r\n            new_bond = pd.DataFrame([[self.bonds.shape[0] + 1, trade.bond_code, trade.par_amount, trade.volume, trade.amount]],\r\n                                    columns=[\"number\", \"bond_code\", \"par_amount\", \"volume\", \"amount\"])\r\n            self.bonds = pd.concat([self.bonds, new_bond])\r\n\r\n    def bonds_minus(self, trade):\r\n        # 债券记减\r\n        if trade.volume < max(self.bonds.loc[self.bonds.bond_code == trade.bond_code, \"volume\"].iloc[0], 1):\r\n            self.bonds.loc[self.bonds.bond_code ==\r\n                           trade.bond_code, \"volume\"] -= trade.volume\r\n            self.bonds.loc[self.bonds.bond_code ==\r\n                           trade.bond_code, \"par_amount\"] -= trade.par_amount\r\n            self.bonds.loc[self.bonds.bond_code ==\r\n                           trade.bond_code, \"amount\"] -= trade.amount\r\n        else:\r\n            self.bonds = self.bonds[self.bonds.bond_code != trade.bond_code]\r\n            self.bonds.number = list(range(1, self.bonds.shape[0] + 1))\r\n\r\n    def portfolio_update_t0(self, trade: Trade):\r\n        # 更新现券交易的银行间T+0交易\r\n        # 更新现券交易的交易所T+1交易时的T+0的现券转移部分，资金转移放在T+1函数内结算\r\n        # 更新转托管T+0的记减 - 转出账户\r\n        # 对于单个账户只会存在t+0的一笔交易\r\n        self.now_time = trade.trade_time\r\n        if trade.direction == \"买入\":\r\n            self.cash = self.cash - \\\r\n                trade.amount if trade.bond_code[-2:] == \"IB\" else self.cash\r\n            self.bonds_add(trade)\r\n        elif trade.direction == \"卖出\":\r\n            self.cash = self.cash + \\\r\n                trade.amount if trade.bond_code[-2:] == \"IB\" else self.cash\r\n            self.bonds_minus(trade)\r\n        elif trade.direction == \"转托管\":\r\n            self.bonds_minus(trade)\r\n\r\n    def portfolio_update_t1(self):\r\n        # 更新现券交易的银行间T+1交易\r\n        # 更新现券交易的交易所T+1交易\r\n        # 当交易参数中：是今天的最后一笔交易时，才执行该函数\r\n        # 找到所有挂起交易中今天可以结算的交易\r\n        trades = self.all_trade[(self.all_trade.settlement_date == self.now_time) &\r\n                                ((self.all_trade.direction == \"买入\") | (self.all_trade.direction == \"卖出\"))]\r\n        if trades.shape[0] == 0:\r\n            return\r\n        for i in trades.index:\r\n            each_trade = trades.loc[i, :]\r\n            print(each_trade)\r\n            if each_trade.direction == \"买入\":\r\n                if self.cash >= each_trade.amount:  # 符合条件，扣减资金，不更新交易\r\n                    self.cash -= each_trade.amount\r\n                    if each_trade.bond_code[-2:] == \"IB\":\r\n                        self.bonds_add(each_trade)\r\n                else:  # 不符合条件，资金不变，冲销交易\r\n                    if each_trade.bond_code[-2:] != \"IB\":\r\n                        self.bonds_minus(each_trade)\r\n            elif each_trade.direction == \"卖出\":\r\n                # 作为卖方，默认对方不会违约\r\n                self.cash += each_trade.amount\r\n                if each_trade.bond_code[-2:] == \"IB\":\r\n                    self.bonds_minus(each_trade)\r\n\r\n    def portfolio_update_transfer(self):\r\n        # 更新转托管的T+1或T+2的记加 - 转入账户\r\n        trades = self.all_trade[(self.all_trade.settlement_date == self.now_time) & (\r\n            self.all_trade.direction == \"转托管\")]\r\n        if trades.shape[0] == 0:\r\n            return\r\n        for i in trades.index:\r\n            each_trade = trades.loc[i, :]\r\n            each_trade.bond_code = each_trade.in_bond_code\r\n            self.bonds_add(each_trade)\r\n\r\n    def to_excel(self):\r\n        portfolio_utils.to_excel(self)\r\n    \r\n    def to_json(self):\r\n        portfolio_utils.to_json(self)\r\n\r\n    def log(self):\r\n        log_name = 'logs/log_{}_{}.csv'.format(\r\n            self.account, self.now_time.replace('/', ''))\r\n        self.all_trade.to_csv(log_name)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/portfolio.py b/portfolio.py
+--- a/portfolio.py	(revision e4a422bc5fca803eb85c53825203cf0dbbec2919)
++++ b/portfolio.py	(date 1626942287799)
+@@ -24,13 +24,15 @@
+ 
+     @property
+     def waiting_trade(self):
++        # 保存所有当日不进行结算的交易
+         # return all unsetlled T+1 trades
+         return self.all_trade[self.all_trade.settlement_date > self.now_time]
+ 
+     @property
+     def waiting_settlement(self):
++        # 保存所有当日进行结算的交易
+         # return all unsetlled trades that is settled today
+-        return self.all_trade[~self.all_trade.is_settled]
++        return self.all_trade[(self.all_trade.settlement_date == self.now_time) & (~self.all_trade.is_settled)]
+ 
+     @property
+     def free_cash(self):
+@@ -85,58 +87,64 @@
+             self.bonds.number = list(range(1, self.bonds.shape[0] + 1))
+ 
+     def portfolio_update_t0(self, trade: Trade):
+-        # 更新现券交易的银行间T+0交易
+         # 更新现券交易的交易所T+1交易时的T+0的现券转移部分，资金转移放在T+1函数内结算
+-        # 更新转托管T+0的记减 - 转出账户
+-        # 对于单个账户只会存在t+0的一笔交易
++        # 买入 - 冻结资金增加； 卖出 - 冻结资金不变
++        if trade.bond_code[-2:] == "IB" or trade.direction == "转托管":
++            return
+         self.now_time = trade.trade_time
+         if trade.direction == "买入":
+-            self.cash = self.cash - \
+-                trade.amount if trade.bond_code[-2:] == "IB" else self.cash
++            self.freeze_cash += trade.amount
+             self.bonds_add(trade)
+         elif trade.direction == "卖出":
+-            self.cash = self.cash + \
+-                trade.amount if trade.bond_code[-2:] == "IB" else self.cash
+-            self.bonds_minus(trade)
+-        elif trade.direction == "转托管":
+             self.bonds_minus(trade)
+ 
+     def portfolio_update_t1(self):
+-        # 更新现券交易的银行间T+1交易
+-        # 更新现券交易的交易所T+1交易
+-        # 当交易参数中：是今天的最后一笔交易时，才执行该函数
+-        # 找到所有挂起交易中今天可以结算的交易
+-        trades = self.all_trade[(self.all_trade.settlement_date == self.now_time) &
+-                                ((self.all_trade.direction == "买入") | (self.all_trade.direction == "卖出"))]
++        # 现券交易 - 交易所T+1 - 结算
++        # Assumption: 一定结算成功
++        trades = self.waiting_settlement[(self.waiting_settlement.bond_code[-2:] != "IB") &
++                                         ((self.all_trade.direction == "买入") | (self.all_trade.direction == "卖出"))]
+         if trades.shape[0] == 0:
+             return
+         for i in trades.index:
+             each_trade = trades.loc[i, :]
+-            print(each_trade)
+             if each_trade.direction == "买入":
+-                if self.cash >= each_trade.amount:  # 符合条件，扣减资金，不更新交易
+-                    self.cash -= each_trade.amount
+-                    if each_trade.bond_code[-2:] == "IB":
+-                        self.bonds_add(each_trade)
+-                else:  # 不符合条件，资金不变，冲销交易
+-                    if each_trade.bond_code[-2:] != "IB":
+-                        self.bonds_minus(each_trade)
++                self.cash -= each_trade.amount
++                self.freeze_cash -= each_trade.amount
+             elif each_trade.direction == "卖出":
+-                # 作为卖方，默认对方不会违约
+                 self.cash += each_trade.amount
+-                if each_trade.bond_code[-2:] == "IB":
+-                    self.bonds_minus(each_trade)
++            self.all_trade.loc[i, "is_settled"] = True
++
++    def portfolio_update_transfer(self, direction="out"):
++        # 更新转托管的T+0的记减 - 转出账户
++        if direction == "out":
++            trades = self.waiting_settlement[self.waiting_settlement.direction == "转托管"]
++            if trades.shape[0] == 0:
++                return
++            for i in trades.index:
++                each_trade = trades.loc[i, :]
++                self.bonds_minus(each_trade)
++                self.all_trade.loc[(self.all_trade.index == i & self.all_trade.direction == "转托管"), "is_settled"] = True
+ 
+-    def portfolio_update_transfer(self):
+         # 更新转托管的T+1或T+2的记加 - 转入账户
+-        trades = self.all_trade[(self.all_trade.settlement_date == self.now_time) & (
+-            self.all_trade.direction == "转托管")]
+-        if trades.shape[0] == 0:
+-            return
+-        for i in trades.index:
+-            each_trade = trades.loc[i, :]
+-            each_trade.bond_code = each_trade.in_bond_code
+-            self.bonds_add(each_trade)
++        elif direction == "in":
++            trades = self.waiting_settlement[self.waiting_settlement.direction == "转托管-转入"]
++            if trades.shape[0] == 0:
++                return
++            for i in trades.index:
++                if self.all_trade.loc[(self.all_trade.index == i & self.all_trade.direction == "转托管"), "is_settled"]:
++                    each_trade = trades.loc[i, :]
++                    self.bonds_add(each_trade)
++                    self.all_trade.loc[(self.all_trade.index == i & self.all_trade.direction == "转托管-转入")] == True
++
++    def portfolio_settlement(self):
++        # 单个账户结算
++        # 交易所T+1的全部结算成功
++        self.portfolio_update_t1()
++        # 银行间T+1和T+0的结算排序结算
++        trades = self.waiting_settlement[]
++
++
++        pass
+ 
+     def to_excel(self):
+         portfolio_utils.to_excel(self)
