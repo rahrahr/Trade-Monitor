@@ -18,20 +18,16 @@ def create_portfolio(account: str) -> Portfolio:
     if isinstance(now_time, datetime.datetime):
         now_time = now_time.date().isoformat().replace('-', '/')
 
-    bonds = sheet.range('A4').expand().options(pd.DataFrame, index=False).value
+    return Portfolio(account, now_time, cash)
 
+def read_bond_position(account: str):
+    sheet = book.sheets[account]
     bonds.columns = ["number", "bond_code",
                      "par_amount", "volume",
                      "amount"]
     bonds.loc[:, ["number", "volume"]] = bonds.loc[:,
                                                    ["number", "volume"]].astype(int)
-
-    return Portfolio(account, now_time, cash, bonds)
-
-def read_bond_position(account: str):
-    sheet = book.sheets[account]
-    cash = float(sheet.range('D2').value)
-    
+    return bonds
 
 def to_excel(portfolio: Portfolio):
     sheet = book.sheets[portfolio.account]

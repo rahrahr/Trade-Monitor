@@ -11,14 +11,13 @@ class Portfolio:
     def __init__(self,
                  account: str,
                  now_time: str,
-                 cash: float,
-                 bonds: pd.DataFrame):
+                 cash: float
+                 ):
 
         self.account = account
         self.now_time = now_time
         self.cash = cash
         self.freeze_cash = 0
-        self.bonds = bonds
         self.all_trade = pd.DataFrame(None,
                                       columns=['bond_code', 'settlement_date', 'trade_date',
                                                'direction', 'amount',
@@ -27,6 +26,10 @@ class Portfolio:
                                          columns=['bond_code', 'settlement_date', 'trade_date',
                                                   'direction', 'amount',
                                                   'volume', 'par_amount', 'in_bond_code', 'is_settled'])
+
+    @property
+    def bonds(self):
+        return portfolio_utils.read_bond_position(self.account)
 
     @property
     def waiting_trade(self):
