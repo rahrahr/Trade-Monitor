@@ -28,6 +28,10 @@ def create_portfolio(account: str) -> Portfolio:
 
     return Portfolio(account, now_time, cash, bonds)
 
+def read_bond_position(account: str):
+    sheet = book.sheets[account]
+    cash = float(sheet.range('D2').value)
+    
 
 def to_excel(portfolio: Portfolio):
     sheet = book.sheets[portfolio.account]
