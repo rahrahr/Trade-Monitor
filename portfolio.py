@@ -183,7 +183,8 @@ class Portfolio:
                 return
             for i in trades.index:
                 for other_portfolio in other_portfolios:
-                    reflective_trades = portfolio_utils.find_reflective_trades(self, other_portfolio)
+                    reflective_trades = portfolio_utils.find_reflective_trades(
+                        self, other_portfolio)
                     print(reflective_trades)
                     if reflective_trades[i]:
                         each_trade = trades.loc[i, :]
@@ -202,7 +203,8 @@ class Portfolio:
         ) - code_trade.loc[code_trade.direction == "卖出", "amount"].sum()
 
         try:
-            max_sell_bond = self.bonds.loc[self.bonds.bond_code == code, "par_amount"].iloc[0]
+            max_sell_bond = self.bonds.loc[self.bonds.bond_code ==
+                                           code, "par_amount"].iloc[0]
         except:
             max_sell_bond = 0
         if net_sell_bond <= max_sell_bond and net_cost_cash <= self.cash:
@@ -289,6 +291,16 @@ class Portfolio:
 
     def to_json(self):
         portfolio_utils.to_json(self)
+
+    def save_position(self):
+        file_name = 'historic_positions/position_{}_{}.csv'.format(
+            self.account, self.now_time.replace('/', ''))
+        cash_row = pd.Series([0, 'cash', self.cash, 0, 0], index=["number", "bond_code",
+                                                                  "par_amount", "volume",
+                                                                  "amount"])
+        df = self.bonds.copy()
+        df.loc['cash'] = cash_row
+        df.to_csv(file_name)
 
     def log(self):
         log_name = 'logs/log_{}_{}.csv'.format(
