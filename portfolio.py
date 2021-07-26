@@ -199,35 +199,27 @@ class Portfolio:
         # 银行间交易单代码结算逻辑
         # 判断能否全部结算
         code = code_trade["bond_code"].iloc[0]
-        net_sell_bond = code_trade.loc[code_trade.direction == "卖出", "par_amount"].sum(
-        ) - code_trade.loc[code_trade.direction == "买入", "par_amount"].sum()
+        sell_trade = code_trade.loc[code_trade.direction == "卖出"]
+        buy_trade = code_trade.loc[code_trade.direction == "买入"]
 
-        net_cost_cash = code_trade.loc[code_trade.direction == "买入", "amount"].sum(
-        ) - code_trade.loc[code_trade.direction == "卖出", "amount"].sum()
+        net_sell_bond = sell_trade["par_amount"].sum() - buy_trade["par_amount"].sum()
+        net_cost_cash = buy_trade["amount"].sum() - sell_trade["amount"].sum()
 
         try:
-            max_sell_bond = self.bonds.loc[self.bonds.bond_code ==
-                                           code, "par_amount"].iloc[0]
+            max_sell_bond = self.bonds.loc[self.bonds.bond_code == code, "par_amount"].iloc[0]
         except:
             max_sell_bond = 0
+
         if net_sell_bond <= max_sell_bond and net_cost_cash <= self.cash:
             for i in code_trade.index:
                 self.all_trade.loc[i, "is_settled"] = True  # 所有交易均能结算
             self.cash -= net_cost_cash
-            if net_sell_bond < max_sell_bond:
-                self.bonds.loc[self.bonds.bond_code ==
-                               code, "volume"] -= net_sell_bond / 100
-                self.bonds.loc[self.bonds.bond_code ==
-                               code, "par_amount"] -= net_sell_bond
-                self.bonds.loc[self.bonds.bond_code ==
-                               code, "amount"] += net_cost_cash
-            else:
-                self.bonds = self.bonds[self.bonds.bond_code != code]
-                self.bonds.number = list(range(1, self.bonds.shape[0] + 1))
+            for i in buy_trade.index: # 购买全部结算
+                self.bonds_add(buy_trade.loc[i,:])
+            for i in sell_trade.index: # 卖出全部结算
+                self.bonds_minus(sell_trade.loc[i,:])
         # 如果不能全部结算，则将不满足条件的去除，剩余的结算
         else:
-            sell_trade = code_trade.loc[code_trade.direction == "卖出"]
-            buy_trade = code_trade.loc[code_trade.direction == "买入"]
             if net_sell_bond > max_sell_bond:
                 # 卖多了，则从卖出的交易中去除
                 a = sell_trade["par_amount"].to_list()
@@ -279,8 +271,12 @@ class Portfolio:
         # 交易所T+1的全部结算成功
         self.portfolio_update_t1()
         # 银行间T+1和T+0的结算排序结算
+        print("waiting_settlement")
+        print(self.waiting_settlement)
         trades = self.waiting_settlement[(self.waiting_settlement.bond_code.map(lambda x:x[-2:]) == "IB") &
                                          ((self.waiting_settlement.direction == "买入") | (self.waiting_settlement.direction == "卖出"))]
+        print("trades")
+        print(trades)
         trades = trades.sort_values(by=["direction", "par_amount"], ascending=(
             False, False))  # 先卖出后买入，票面金额从大到小排序
         code_sig = trades.drop_duplicates(
