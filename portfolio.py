@@ -20,11 +20,11 @@ class Portfolio:
         self.freeze_cash = 0
         self.bonds = bonds
         self.all_trade = pd.DataFrame(None,
-                                      columns=['bond_code', 'settlement_date',
+                                      columns=['bond_code', 'settlement_date', 'trade_date',
                                                'direction', 'amount',
                                                'volume', 'par_amount', 'in_bond_code', 'is_settled'])
         self.failed_trade = pd.DataFrame(None,
-                                         columns=['bond_code', 'settlement_date',
+                                         columns=['bond_code', 'settlement_date', 'trade_date',
                                                   'direction', 'amount',
                                                   'volume', 'par_amount', 'in_bond_code', 'is_settled'])
 
@@ -43,20 +43,20 @@ class Portfolio:
         return self.cash - self.freeze_cash
 
     def append_waiting_trade(self, trade: Trade):
-        x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
+        x = pd.DataFrame([[trade.bond_code, trade.settlement_date, trade.trade_time,
                            trade.direction, trade.amount,
                            trade.volume, trade.par_amount, trade.is_settled]],
-                         columns=['bond_code', 'settlement_date',
+                         columns=['bond_code', 'settlement_date', 'trade_date'
                                   'direction', 'amount',
                                   'volume', 'par_amount', 'is_settled'],
                          index=[trade.id])
 
         if hasattr(trade, 'in_bond_code'):
-            x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
+            x = pd.DataFrame([[trade.bond_code, trade.settlement_date, trade.trade_time,
                                trade.direction, trade.amount,
                                trade.volume, trade.par_amount, trade.in_bond_code,
                                trade.is_settled]],
-                             columns=['bond_code', 'settlement_date',
+                             columns=['bond_code', 'settlement_date', 'trade_date',
                                       'direction', 'amount',
                                       'volume', 'par_amount', 'in_bond_code',
                                       'is_settled'],
@@ -64,21 +64,21 @@ class Portfolio:
         self.all_trade = self.all_trade.append(x)
         print(self.all_trade)
 
-    def append_failed_trade(self, trade):
-        x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
+    def append_failed_trade(self, trade: Trade):
+        x = pd.DataFrame([[trade.bond_code, trade.settlement_date, trade.trade_time,
                            trade.direction, trade.amount,
                            trade.volume, trade.par_amount, trade.is_settled]],
-                         columns=['bond_code', 'settlement_date',
+                         columns=['bond_code', 'settlement_date', 'trade_date',
                                   'direction', 'amount',
                                   'volume', 'par_amount', 'is_settled'],
                          index=[trade.name])
 
         if hasattr(trade, 'in_bond_code'):
-            x = pd.DataFrame([[trade.bond_code, trade.settlement_date,
+            x = pd.DataFrame([[trade.bond_code, trade.settlement_date, trade.trade_time,
                                trade.direction, trade.amount,
                                trade.volume, trade.par_amount, trade.in_bond_code,
                                trade.is_settled]],
-                             columns=['bond_code', 'settlement_date',
+                             columns=['bond_code', 'settlement_date', 'trade_date',
                                       'direction', 'amount',
                                       'volume', 'par_amount', 'in_bond_code',
                                       'is_settled'],
@@ -303,9 +303,11 @@ class Portfolio:
         df.to_csv(file_name)
 
     def log(self):
-        log_name = 'logs/log_{}_{}.csv'.format(
-            self.account, self.now_time.replace('/', ''))
-        self.all_trade.to_csv(log_name)
+        for date in set(self.all_trade.trade_date):
+            df = self.all_trade[self.all_trade.trade_date == date]
+            log_name = 'logs/log_{}_{}.csv'.format(
+                self.account, date.replace('/', ''))
+            df.to_csv(log_name)
 
     def get_nearst(self, a, begin, M):
         # 递归函数，找到一组数中间和最接近且小于M的组合
