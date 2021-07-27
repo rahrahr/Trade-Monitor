@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>656</width>
-    <height>436</height>
+    <width>682</width>
+    <height>407</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -33,8 +33,8 @@
      <rect>
       <x>30</x>
       <y>30</y>
-      <width>595</width>
-      <height>342</height>
+      <width>591</width>
+      <height>321</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
@@ -324,13 +324,20 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>390</y>
+      <x>40</x>
+      <y>370</y>
       <width>457</width>
       <height>32</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="is_last_trade">
+       <property name="text">
+        <string>完成今日交易</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="reset">
        <property name="text">
@@ -342,13 +349,6 @@
       <widget class="QPushButton" name="save_log">
        <property name="text">
         <string>保存交易日志</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="is_last_trade">
-       <property name="text">
-        <string>完成今日交易</string>
        </property>
       </widget>
      </item>

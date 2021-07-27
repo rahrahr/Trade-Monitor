@@ -36,8 +36,8 @@ def to_excel(portfolio: Portfolio):
     sheet.range('D2').value = portfolio.cash
     sheet.range('F2').value = portfolio.free_cash
 
-    sheet.range('A4').expand().value = None
     bonds = portfolio.bonds.set_index('number')
+    sheet.range('A4').expand().value = None
     bonds.columns = ['债券代码', '券面金额（元）', '持仓量（张）', '金额金额（元）']
     bonds.index.name = '编号'
     sheet.range('A4').value = bonds

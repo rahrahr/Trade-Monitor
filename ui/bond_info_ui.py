@@ -28,6 +28,12 @@ class BondInfoUi(QtWidgets.QMdiSubWindow):
                 portfolio.to_excel()
                 portfolio.to_json()
 
+        if hasattr(self, 'parent'):
+            for key in self.parent.portfolios:
+                self.parent.portfolios[key] = self.initial_portfolios[key]
+
+        QtWidgets.QMessageBox().about(self, '', '重置完毕')
+
     def getInfo(self):
         code = self.code.text()
         clean_price = self.clean_price.text()

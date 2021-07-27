@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>598</width>
-    <height>96</height>
+    <width>650</width>
+    <height>95</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -24,7 +24,7 @@
     <rect>
      <x>10</x>
      <y>40</y>
-     <width>571</width>
+     <width>631</width>
      <height>41</height>
     </rect>
    </property>
@@ -53,16 +53,23 @@
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>账户时间</string>
+     <widget class="QDateEdit" name="now_time">
+      <property name="displayFormat">
+       <string>yyyy/MM/dd</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QDateEdit" name="now_time">
-      <property name="displayFormat">
-       <string>yyyy/mm/dd</string>
+     <widget class="QPushButton" name="now_time_button">
+      <property name="text">
+       <string>设定账户时间</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="check_info">
+      <property name="text">
+       <string>查看账户信息</string>
       </property>
      </widget>
     </item>

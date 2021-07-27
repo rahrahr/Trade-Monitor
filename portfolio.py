@@ -321,7 +321,7 @@ class Portfolio:
             df = self.all_trade[self.all_trade.trade_date == date]
             log_name = 'logs/log_{}_{}.csv'.format(
                 self.account, date.replace('/', ''))
-            df.to_csv(log_name)
+            df.to_csv(log_name, encoding='gbk')
 
     def get_nearst(self, a, begin, M):
         # 递归函数，找到一组数中间和最接近且小于M的组合

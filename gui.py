@@ -40,9 +40,13 @@ class Ui(QtWidgets.QMainWindow):
         self.bond_info_ui.is_last_trade.clicked.connect(self.updateTplus1)
         self.bond_info_ui.send_settlement.clicked.connect(self.sendSettlement)
         self.bond_info_ui.save_log.clicked.connect(self.saveLog)
+        self.bond_info_ui.parent = self
 
         self.transfer_ui.send_order.clicked.connect(self.sendTransferOrder)
         self.transfer_ui.is_last_trade.clicked.connect(self.updateTransfer)
+
+        self.trader_ui.now_time_button.clicked.connect(self.changeNowtime)
+        self.trader_ui.check_info.clicked.connect(self.checkTraderInfo)
 
         # create Portfolio instances for all accounts.
         self.portfolios = {}
@@ -61,7 +65,12 @@ class Ui(QtWidgets.QMainWindow):
                     portfolio_utils.create_portfolio(account)
                 x = self.bond_info_ui.initial_portfolios[key_1 + key_2].bonds
                 self.bond_info_ui.initial_portfolios[key_1 + key_2].init = True
-                self.bond_info_ui.initial_portfolios[key_1 + key_2].initial_value = x
+                self.bond_info_ui.initial_portfolios[key_1 +
+                                                     key_2].initial_value = x
+                self.bond_info_ui.initial_portfolios[key_1 +
+                                                     key_2].key_1 = key_1
+                self.bond_info_ui.initial_portfolios[key_1 +
+                                                     key_2].key_2 = key_2
 
     def getPosition(self):
         trader_position = json.load(open('trader.json', encoding='utf-8'))[
@@ -75,6 +84,51 @@ class Ui(QtWidgets.QMainWindow):
 
         self.bond_info_ui.bond_position.setText(str(bond_position))
         self.bond_info_ui.cash_position.setText(str(cash_position))
+
+    def changeNowtime(self):
+        list_type = self.trader_ui.list_type.currentText()
+        trader_id = self.trader_ui.account_list.currentText()
+        key = list_type + trader_id
+
+        date = self.trader_ui.now_time.text()
+        self.portfolios[key].now_time = date
+        QtWidgets.QMessageBox().about(self, '提示', '账户时间被设置为"{}"'.format(date))
+
+    def checkTraderInfo(self):
+        list_type = self.trader_ui.list_type.currentText()
+        trader_id = self.trader_ui.account_list.currentText()
+        key = list_type + trader_id
+        portfolio = self.portfolios[key]
+
+        popup = QtWidgets.QMainWindow(parent=self)
+        mainlayout = QtWidgets.QVBoxLayout()
+        widget = QtWidgets.QWidget()
+        widget.setLayout(mainlayout)
+        popup.setCentralWidget(widget)
+
+        trader_info = '''
+        账户名称:{}
+        内置时间:{}
+        全部资金:{}
+        可用资金:{}
+        '''.format(portfolio.account, portfolio.now_time, portfolio.cash, portfolio.free_cash)
+        msg = QtWidgets.QTextBrowser()
+        msg.setText(trader_info)
+        mainlayout.addWidget(msg)
+
+        df_ = displayDataFrame(portfolio.bonds, key, self)
+        mainlayout.addWidget(df_)
+
+        df_2 = displayDataFrame(portfolio.all_trade, key, self)
+        mainlayout.addWidget(df_)
+
+        msg_2 = QtWidgets.QMessageBox()
+        msg_2.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        mainlayout.addWidget(msg_2)
+        popup.resize(600, 600)
+        popup.show()
+        msg_2.exec_()
+        popup.close()
 
     def _export_trader_info(self):
         excel_utils._export_trader_info(self)
@@ -330,6 +384,8 @@ class Ui(QtWidgets.QMainWindow):
         mainlayout.addWidget(df)
         popup.resize(600, 600)
         popup.show()
+        msg.exec_()
+        popup.close()
 
     def saveLog(self):
         for x in self.portfolios.values():
