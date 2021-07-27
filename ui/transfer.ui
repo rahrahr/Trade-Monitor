@@ -28,7 +28,7 @@
      <height>321</height>
     </rect>
    </property>
-   <widget class="QWidget" name="layoutWidget">
+   <widget class="QWidget" name="widget" native="true">
     <property name="geometry">
      <rect>
       <x>20</x>

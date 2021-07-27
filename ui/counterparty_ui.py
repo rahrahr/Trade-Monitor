@@ -9,6 +9,7 @@ class CounterpartyUi(QtWidgets.QMdiSubWindow):
     def __init__(self):
         super(CounterpartyUi, self).__init__()
         uic.loadUi("ui/counterparty.ui", self)
+        
         counterparty = json.load(open('counterparty.json', encoding='utf-8'))
         self.counterparty_type.clear()
         self.counterparty_type.addItems(counterparty.keys())

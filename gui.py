@@ -39,6 +39,7 @@ class Ui(QtWidgets.QMainWindow):
         self.bond_info_ui.send_order.clicked.connect(self.sendOrder)
         self.bond_info_ui.is_last_trade.clicked.connect(self.updateTplus1)
         self.bond_info_ui.send_settlement.clicked.connect(self.sendSettlement)
+        self.bond_info_ui.save_log.clicked.connect(self.saveLog)
 
         self.transfer_ui.send_order.clicked.connect(self.sendTransferOrder)
         self.transfer_ui.is_last_trade.clicked.connect(self.updateTransfer)
@@ -328,6 +329,10 @@ class Ui(QtWidgets.QMainWindow):
         mainlayout.addWidget(df)
         popup.resize(600, 600)
         popup.show()
+
+    def saveLog(self):
+        for x in self.portfolios.values():
+            x.log()
 
 
 class PandasModel(QtCore.QAbstractTableModel):

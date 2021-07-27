@@ -10,6 +10,7 @@ class TransferUi(QtWidgets.QMdiSubWindow):
     def __init__(self):
         super(TransferUi, self).__init__()
         uic.loadUi("ui/transfer.ui", self)
+        
         self.get_transfer_info.clicked.connect(self.getTransferInfo)
         self.get_position.clicked.connect(self.getPosition)
 

@@ -1,17 +1,32 @@
+from utils import *
 import json
 import re
 from PyQt5 import QtWidgets, uic
 import traceback
 import sys
 sys.path.append("..")
-from utils import *
+
 
 class BondInfoUi(QtWidgets.QMdiSubWindow):
     def __init__(self):
         super(BondInfoUi, self).__init__()
         uic.loadUi("ui/bond_info.ui", self)
+
         self.get_info.clicked.connect(self.getInfo)
         self.start_calculation.clicked.connect(self.calculate)
+        self.reset.clicked.connect(self.Reset)
+
+    def Reset(self):
+        for LineEditor in self.findChildren(QtWidgets.QLineEdit):
+            LineEditor.clear()
+
+        for QDateEdit in self.findChildren(QtWidgets.QDateEdit):
+            QDateEdit.setDate(QtWidgets.QDateEdit().date())
+
+        if hasattr(self, 'initial_portfolios'):
+            for portfolio in self.initial_portfolios.values():
+                portfolio.to_excel()
+                portfolio.to_json()
 
     def getInfo(self):
         code = self.code.text()
