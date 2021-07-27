@@ -59,8 +59,9 @@ class Ui(QtWidgets.QMainWindow):
 
                 self.bond_info_ui.initial_portfolios[key_1 + key_2] =\
                     portfolio_utils.create_portfolio(account)
-                self.bond_info_ui.initial_portfolios[key_1 + key_2].bonds =\
-                    self.bond_info_ui.initial_portfolios[key_1 + key_2].bonds.copy()
+                x = self.bond_info_ui.initial_portfolios[key_1 + key_2].bonds
+                self.bond_info_ui.initial_portfolios[key_1 + key_2].init = True
+                self.bond_info_ui.initial_portfolios[key_1 + key_2].initial_value = x
 
     def getPosition(self):
         trader_position = json.load(open('trader.json', encoding='utf-8'))[

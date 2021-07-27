@@ -26,9 +26,16 @@ class Portfolio:
                                          columns=['bond_code', 'settlement_date', 'trade_date',
                                                   'direction', 'amount',
                                                   'volume', 'par_amount', 'in_bond_code', 'is_settled'])
+        self.init = False
+        self.initial_value = pd.DataFrame(None,
+                                          columns=['bond_code', 'settlement_date', 'trade_date',
+                                                   'direction', 'amount',
+                                                   'volume', 'par_amount', 'in_bond_code', 'is_settled'])
 
     @property
     def bonds(self):
+        if self.init:
+            return self.initial_value
         return portfolio_utils.read_bond_position(self.account)
 
     @property
@@ -202,11 +209,13 @@ class Portfolio:
         sell_trade = code_trade.loc[code_trade.direction == "卖出"]
         buy_trade = code_trade.loc[code_trade.direction == "买入"]
 
-        net_sell_bond = sell_trade["par_amount"].sum() - buy_trade["par_amount"].sum()
+        net_sell_bond = sell_trade["par_amount"].sum(
+        ) - buy_trade["par_amount"].sum()
         net_cost_cash = buy_trade["amount"].sum() - sell_trade["amount"].sum()
 
         try:
-            max_sell_bond = self.bonds.loc[self.bonds.bond_code == code, "par_amount"].iloc[0]
+            max_sell_bond = self.bonds.loc[self.bonds.bond_code ==
+                                           code, "par_amount"].iloc[0]
         except:
             max_sell_bond = 0
 
@@ -214,10 +223,10 @@ class Portfolio:
             for i in code_trade.index:
                 self.all_trade.loc[i, "is_settled"] = True  # 所有交易均能结算
             self.cash -= net_cost_cash
-            for i in buy_trade.index: # 购买全部结算
-                self.bonds_add(buy_trade.loc[i,:])
-            for i in sell_trade.index: # 卖出全部结算
-                self.bonds_minus(sell_trade.loc[i,:])
+            for i in buy_trade.index:  # 购买全部结算
+                self.bonds_add(buy_trade.loc[i, :])
+            for i in sell_trade.index:  # 卖出全部结算
+                self.bonds_minus(sell_trade.loc[i, :])
         # 如果不能全部结算，则将不满足条件的去除，剩余的结算
         else:
             if net_sell_bond > max_sell_bond:
